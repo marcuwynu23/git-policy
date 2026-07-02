@@ -1,0 +1,3 @@
+#!/bin/sh
+# git-policy: pre-push hook
+exec git-policy run

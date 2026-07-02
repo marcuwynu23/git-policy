@@ -1,0 +1,3 @@
+#!/bin/sh
+# git-policy: post-merge hook
+exec git-policy run

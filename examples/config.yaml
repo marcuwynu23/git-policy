@@ -1,0 +1,35 @@
+version: 1
+
+hooks:
+  pre-commit:
+    enabled: true
+  commit-msg:
+    enabled: true
+  pre-push:
+    enabled: true
+  post-merge:
+    enabled: false
+
+policies:
+  blockFiles:
+    - ".env"
+    - "*.pem"
+    - "*.key"
+    - "*.p12"
+    - "*.crt"
+  maxFileSize: "10MB"
+  secretScan: true
+  protectedBranches:
+    - main
+    - master
+    - production
+  conventionalCommits: true
+  blockBinaries:
+    - ".exe"
+    - ".dll"
+    - ".so"
+    - ".iso"
+    - ".zip"
+  requiredFiles:
+    - README.md
+    - LICENSE

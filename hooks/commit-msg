@@ -1,0 +1,3 @@
+#!/bin/sh
+# git-policy: commit-msg hook
+exec git-policy run

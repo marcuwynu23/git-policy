@@ -1,0 +1,3 @@
+#!/bin/sh
+# git-policy: pre-commit hook
+exec git-policy run
