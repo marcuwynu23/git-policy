@@ -1,6 +1,6 @@
 <div align="center">
 
-# git-policy
+# git policy
 
 **Global Git rule management.** Install once, protect every repo.
 
@@ -9,18 +9,18 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)](PLAN.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
-```bash
-git-policy install   # one-time setup
-git add .env
-git commit -m "test" # ← blocked automatically
-```
-
 No per-repo setup. No repo-based Git hooks to configure. No CI dependency.
 Just one global install and every repository on your machine is protected.
 
 </div>
 
 ---
+
+```bash
+git policy install   # one-time setup
+git add .env
+git commit -m "test" # ← blocked automatically
+```
 
 ## Why git-policy?
 
@@ -40,16 +40,16 @@ to every repo you work on. Zero setup per project. Zero CI configuration.
 
 ### How it's different
 
-|                         | git-policy | Husky | Lefthook | pre-commit |
-|-------------------------|-----------|-------|----------|------------|
-| Install once globally   | Yes       | No    | No       | No         |
-| Per-repo setup needed   | **None**  | npm install + init | config file per repo | `.pre-commit-config.yaml` |
-| Built-in secret scanner | Yes       | No    | No       | Plugin     |
-| Built-in branch protect | Yes       | No    | No       | No         |
-| Built-in file blocking  | Yes       | No    | No       | No         |
-| Built-in commit lint    | Yes       | Plugin| Script   | Plugin     |
-| Cross-platform          | Yes       | Yes   | Yes      | Yes        |
-| Written in              | **Go** (static binary) | JS | Ruby | Python |
+|                         | git-policy             | Husky              | Lefthook             | pre-commit                |
+| ----------------------- | ---------------------- | ------------------ | -------------------- | ------------------------- |
+| Install once globally   | Yes                    | No                 | No                   | No                        |
+| Per-repo setup needed   | **None**               | npm install + init | config file per repo | `.pre-commit-config.yaml` |
+| Built-in secret scanner | Yes                    | No                 | No                   | Plugin                    |
+| Built-in branch protect | Yes                    | No                 | No                   | No                        |
+| Built-in file blocking  | Yes                    | No                 | No                   | No                        |
+| Built-in commit lint    | Yes                    | Plugin             | Script               | Plugin                    |
+| Cross-platform          | Yes                    | Yes                | Yes                  | Yes                       |
+| Written in              | **Go** (static binary) | JS                 | Ruby                 | Python                    |
 
 ---
 
@@ -78,7 +78,7 @@ project you're working on.
 ### DevOps / CI/CD Teams
 
 git-policy **shifts left** — it catches rule violations on the
-developer's machine *before* code ever reaches CI/CD, the cloud,
+developer's machine _before_ code ever reaches CI/CD, the cloud,
 or a code review.
 
 ```mermaid
@@ -97,6 +97,7 @@ down the team. With git-policy, issues are blocked **instantly**
 at the one place they're cheapest to fix: the developer's keyboard.
 
 **What this means for DevOps:**
+
 - **Fewer failed CI runs** — secrets, large files, and bad messages
   are filtered before `git push`
 - **Less noise in CloudWatch / Datadog / alerts** — no accidental
@@ -129,14 +130,14 @@ flowchart LR
 
 ## Built-in Rules
 
-| Rule | What it does |
-|--------|-------------|
-| **BlockFiles** | Prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable) |
-| **SecretScan** | Detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens, JWTs, and more in staged files |
-| **BranchProtection** | Blocks direct commits to `main`, `master`, `production` (configurable) |
-| **CommitMessage** | Enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc. |
-| **FileSize** | Rejects files larger than the configured limit (default 10MB) |
-| **BinaryFile** | Blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed |
+| Rule                 | What it does                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| **BlockFiles**       | Prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable)                           |
+| **SecretScan**       | Detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens, JWTs, and more in staged files |
+| **BranchProtection** | Blocks direct commits to `main`, `master`, `production` (configurable)                                  |
+| **CommitMessage**    | Enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc.                                  |
+| **FileSize**         | Rejects files larger than the configured limit (default 10MB)                                           |
+| **BinaryFile**       | Blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed                                       |
 
 Each rule can be enabled/disabled individually via the CLI or config file.
 
@@ -151,10 +152,10 @@ cd git-policy
 make dev
 
 # 2. Verify
-git-policy doctor
+git policy doctor
 
 # 3. See active rules
-git-policy rule list
+git policy rule list
 
 # 4. It just works — try it
 mkdir test-repo && cd test-repo
@@ -170,17 +171,17 @@ For detailed usage, see [GUIDE.md](GUIDE.md).
 
 ## Commands at a Glance
 
-| Command | What it does |
-|---------|-------------|
-| `install` | Install global hooks (one-time) |
-| `uninstall` | Remove hooks (keeps config) |
-| `uninstall --all` | Remove hooks + config entirely |
-| `run` | Run rules against current repo |
-| `doctor` | Check if git-policy is set up correctly |
-| `validate` | Check if config is valid |
-| `rule list` | Show all rules and on/off status |
-| `rule enable <name>` | Turn a rule on |
-| `rule disable <name>` | Turn a rule off |
+| Command               | What it does                            |
+| --------------------- | --------------------------------------- |
+| `install`             | Install global hooks (one-time)         |
+| `uninstall`           | Remove hooks (keeps config)             |
+| `uninstall --all`     | Remove hooks + config entirely          |
+| `run`                 | Run rules against current repo          |
+| `doctor`              | Check if git-policy is set up correctly |
+| `validate`            | Check if config is valid                |
+| `rule list`           | Show all rules and on/off status        |
+| `rule enable <name>`  | Turn a rule on                          |
+| `rule disable <name>` | Turn a rule off                         |
 
 > `policy` may be used in place of `rule` (e.g. `git-policy policy list`) as an accepted alias.
 
@@ -212,11 +213,11 @@ git commit -m "feat: add env example"
 
 ## Documentation
 
-| Resource | What's in it |
-|----------|-------------|
-| **[GUIDE.md](GUIDE.md)** | Full usage guide, configuration reference, testing, troubleshooting |
-| **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards |
-| **[PLAN.md](PLAN.md)** | Architecture, roadmap, and development plan |
+| Resource                               | What's in it                                                        |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| **[GUIDE.md](GUIDE.md)**               | Full usage guide, configuration reference, testing, troubleshooting |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards                     |
+| **[PLAN.md](PLAN.md)**                 | Architecture, roadmap, and development plan                         |
 
 ---
 
