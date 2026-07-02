@@ -1,0 +1,216 @@
+# git-policy
+
+**Global Git rule management.** Install once, protect every repo.
+
+```bash
+git-policy install   # one-time setup
+git add .env
+git commit -m "test" # ← blocked automatically
+```
+
+No `npm install` per project. No `.husky` directory. No CI dependency.
+Just one global install and every repository on your machine is protected.
+
+---
+
+## Why git-policy?
+
+Every developer has accidentally committed something they shouldn't:
+
+- A `.env` file with database credentials
+- An AWS secret key hardcoded in a config file
+- A 200MB binary that bloats the repo forever
+- A commit directly to `main` or `production`
+- A sloppy commit message like `"fixed stuff"`
+
+Existing tools like **Husky**, **Lefthook**, and **pre-commit** solve this —
+but only if you configure them **in every single repository**.
+
+git-policy flips the model: **install once globally**, and rules apply
+to every repo you work on. Zero setup per project. Zero CI configuration.
+
+### How it's different
+
+|                         | git-policy | Husky | Lefthook | pre-commit |
+|-------------------------|-----------|-------|----------|------------|
+| Install once globally   | Yes       | No    | No       | No         |
+| Per-repo setup needed   | **None**  | npm install + init | config file per repo | `.pre-commit-config.yaml` |
+| Built-in secret scanner | Yes       | No    | No       | Plugin     |
+| Built-in branch protect | Yes       | No    | No       | No         |
+| Built-in file blocking  | Yes       | No    | No       | No         |
+| Built-in commit lint    | Yes       | Plugin| Script   | Plugin     |
+| Cross-platform          | Yes       | Yes   | Yes      | Yes        |
+| Written in              | **Go** (static binary) | JS | Ruby | Python |
+
+---
+
+## Use Cases
+
+### Solo Developer
+
+You work on 10+ projects. You don't want to set up hooks in each one.
+Install git-policy once. Every `git commit` is checked automatically.
+No configuration files scattered across your projects.
+
+### Engineering Team
+
+Your team has standards: conventional commits, no secrets in code,
+no direct pushes to production. Share one YAML config file.
+Every developer runs `git-policy install` once on their machine.
+Enforcement happens locally, before code ever reaches CI.
+
+### Open Source Maintainer
+
+Contributors come and go. You can't enforce that everyone installs
+a specific tool. With global git-policy, at least **you** are protected
+from accidental secret leaks or bad commits, regardless of which
+project you're working on.
+
+### DevOps / CI/CD Teams
+
+git-policy **shifts left** — it catches rule violations on the
+developer's machine *before* code ever reaches CI/CD, the cloud,
+or a code review.
+
+```mermaid
+flowchart LR
+    A[Developer commit] --> B{git-policy}
+    B -->|Pass| C[git push]
+    B -->|Block| D[Fix locally]
+    C --> E{CI/CD Pipeline}
+    E -->|Pass| F[Deploy to Cloud]
+    D --> A
+```
+
+Without git-policy, secret leaks or bad commits are only caught
+mid-pipeline — wasting CI minutes, clogging logs, and slowing
+down the team. With git-policy, issues are blocked **instantly**
+at the one place they're cheapest to fix: the developer's keyboard.
+
+**What this means for DevOps:**
+- **Fewer failed CI runs** — secrets, large files, and bad messages
+  are filtered before `git push`
+- **Less noise in CloudWatch / Datadog / alerts** — no accidental
+  credentials making it to the repo
+- **Faster feedback loop** — developer knows in < 100ms instead
+  of waiting 5-15 minutes for a CI job
+- **No CI dependency** — rules work offline, on a plane, in
+  an airgapped environment
+
+### Open Source Maintainer
+
+Contributors come and go. You can't enforce that everyone installs
+a specific tool. With global git-policy, at least **you** are protected
+from accidental secret leaks or bad commits, regardless of which
+project you're working on.
+
+---
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[git commit] --> B[git-policy run]
+    B --> C{All rules pass?}
+    C -->|Yes| D[✅ Commit proceeds]
+    C -->|No| E[❌ Commit blocked]
+```
+
+---
+
+## Built-in Rules
+
+| Rule | What it does |
+|--------|-------------|
+| **BlockFiles** | Prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable) |
+| **SecretScan** | Detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens, JWTs, and more in staged files |
+| **BranchProtection** | Blocks direct commits to `main`, `master`, `production` (configurable) |
+| **CommitMessage** | Enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc. |
+| **FileSize** | Rejects files larger than the configured limit (default 10MB) |
+| **BinaryFile** | Blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed |
+
+Each rule can be enabled/disabled individually via the CLI or config file.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Install
+git clone https://github.com/marcuwynu23/git-policy
+cd git-policy
+make dev
+
+# 2. Verify
+git-policy doctor
+
+# 3. See active rules
+git-policy rule list
+
+# 4. It just works — try it
+mkdir test-repo && cd test-repo
+git init
+echo "secret=abc" > .env
+git add .env
+git commit -m "test"    # ← blocked by BlockFiles rule
+```
+
+For detailed usage, see [GUIDE.md](GUIDE.md).
+
+---
+
+## Commands at a Glance
+
+| Command | What it does |
+|---------|-------------|
+| `install` | Install global hooks (one-time) |
+| `uninstall` | Remove hooks (keeps config) |
+| `uninstall --all` | Remove hooks + config entirely |
+| `run` | Run rules against current repo |
+| `doctor` | Check if git-policy is set up correctly |
+| `validate` | Check if config is valid |
+| `rule list` | Show all rules and on/off status |
+| `rule enable <name>` | Turn a rule on |
+| `rule disable <name>` | Turn a rule off |
+
+> `policy` may be used in place of `rule` (e.g. `git-policy policy list`) as an accepted alias.
+
+---
+
+## Example Workflow
+
+```bash
+# Developer clones a project — git-policy is already active
+git clone https://github.com/team/project
+cd project
+
+# Accidentally stage a .env file
+echo "DB_PASSWORD=secret" > .env
+git add .env
+git commit -m "add config"
+
+# BLOCKED: BlockFiles - .env detected
+# Fix: Remove .env from staging or add it to .gitignore
+
+# Developer fixes
+echo "DB_PASSWORD=secret" > .env.example
+git add .env.example
+git commit -m "feat: add env example"
+# PASS: All policies passed
+```
+
+---
+
+## Documentation
+
+| Resource | What's in it |
+|----------|-------------|
+| **[GUIDE.md](GUIDE.md)** | Full usage guide, configuration reference, testing, troubleshooting |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards |
+| **[PLAN.md](PLAN.md)** | Architecture, roadmap, and development plan |
+
+---
+
+## License
+
+MIT
