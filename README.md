@@ -1,6 +1,13 @@
+<div align="center">
+
 # git-policy
 
 **Global Git rule management.** Install once, protect every repo.
+
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)](PLAN.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
 ```bash
 git-policy install   # one-time setup
@@ -8,8 +15,10 @@ git add .env
 git commit -m "test" # ← blocked automatically
 ```
 
-No `npm install` per project. No `.husky` directory. No CI dependency.
+No per-repo setup. No repo-based Git hooks to configure. No CI dependency.
 Just one global install and every repository on your machine is protected.
+
+</div>
 
 ---
 
