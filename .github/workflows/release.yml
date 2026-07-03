@@ -52,7 +52,7 @@ jobs:
             ext=".exe"
           fi
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-            go build -ldflags "-s -w -X main.version=${VERSION}" \
+            go build -ldflags "-w -X github.com/marcuwynu23/git-policy/cmd.version=${VERSION}" \
             -o "dist/${APP_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}${ext}" .
 
       - name: Upload artifacts
