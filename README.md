@@ -241,8 +241,8 @@ These are all on the roadmap.
 
 ## Community
 
-- [Code of Conduct](.github/CODE_OF_CONDUCT.md) — expectations for contributors
-- [Security Policy](.github/SECURITY.md) — how to report vulnerabilities
+- [Code of Conduct](CODE_OF_CONDUCT.md) — expectations for contributors
+- [Security Policy](SECURITY.md) — how to report vulnerabilities
 - [Support Guide](.github/SUPPORT.md) — where to get help
 - [Issue Template](.github/ISSUE_TEMPLATE/) — templates for reporting bugs or feature requests
 - [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md) — PR guidelines
