@@ -26,8 +26,6 @@ func Run(cfg *config.Config) error {
 		return fmt.Errorf("getting branch name: %w", err)
 	}
 
-	commitMsg, _ := git.GetCommitMessage()
-
 	eng := engine.New(cfg)
 	eng.Register(policy.NewBlockFilesPolicy(cfg))
 	eng.Register(policy.NewCommitMessagePolicy(cfg))
@@ -40,7 +38,6 @@ func Run(cfg *config.Config) error {
 		RepoPath:    ".",
 		StagedFiles: stagedFiles,
 		BranchName:  branchName,
-		CommitMsg:   commitMsg,
 	})
 
 	hasErrors := false
