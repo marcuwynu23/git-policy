@@ -5,7 +5,7 @@
 **Global Git rule management.** Install once, protect every repo.
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)](PLAN.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
@@ -211,6 +211,25 @@ git commit -m "feat: add env example"
 
 ---
 
+## Limitations
+
+- **No per-repo overrides** — policies are global only. You can't have
+  different rules for different projects yet.
+- **No custom rules** — the plugin system is not implemented. You're
+  limited to the 6 built-in rules.
+- **No remote sync** — team policy distribution via Git repo or HTTP
+  endpoint is planned but not available.
+- **No pre-push rules** — the pre-push hook runs policies but there
+  are no push-specific checks (e.g., blocking force push).
+- **No GUI** — CLI only.
+- **No Windows native hooks** — hooks run via Git Bash (shipped with
+  Git for Windows). No PowerShell-based hooks.
+
+These are all on the roadmap. See [PLAN.md](PLAN.md) for the full
+development timeline.
+
+---
+
 ## Documentation
 
 | Resource                               | What's in it                                                        |
@@ -221,6 +240,20 @@ git commit -m "feat: add env example"
 
 ---
 
+## Community
+
+- [Code of Conduct](.github/CODE_OF_CONDUCT.md) — expectations for contributors
+- [Security Policy](.github/SECURITY.md) — how to report vulnerabilities
+- [Support Guide](.github/SUPPORT.md) — where to get help
+- [Issue Template](.github/ISSUE_TEMPLATE/) — templates for reporting bugs or feature requests
+- [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md) — PR guidelines
+
+---
+
 ## License
 
-MIT
+Apache 2.0 — chosen for its patent protection and compatibility with
+the open-source ecosystem. Contributions are accepted under the same
+license.
+
+Happy coding!
