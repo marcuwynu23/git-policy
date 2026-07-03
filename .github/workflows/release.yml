@@ -10,27 +10,11 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
 
-  build:
+  release:
     runs-on: ubuntu-latest
     needs: [test]
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-          - goos: linux
-            goarch: arm64
-          - goos: darwin
-            goarch: amd64
-          - goos: darwin
-            goarch: arm64
-          - goos: windows
-            goarch: amd64
-          - goos: windows
-            goarch: arm64
     env:
       APP_NAME: git-policy
       VERSION: ${{ github.ref_name }}
@@ -43,39 +27,20 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Build release artifact
+      - name: Build all platforms
         shell: bash
         run: |
           mkdir -p dist
-          ext=""
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            ext=".exe"
-          fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-            go build -ldflags "-w -X github.com/marcuwynu23/git-policy/cmd.version=${VERSION}" \
-            -o "dist/${APP_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}${ext}" .
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/*
-          retention-days: 1
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: [build]
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Collect binaries
-        shell: bash
-        run: |
-          mkdir -p dist
-          find . -type f -name "${APP_NAME}-*" -exec cp {} dist/ \;
+          for pair in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+            goos="${pair%/*}"
+            goarch="${pair#*/}"
+            ext=""
+            [ "$goos" = "windows" ] && ext=".exe"
+            echo "Building $goos/$goarch..."
+            GOOS=$goos GOARCH=$goarch go build \
+              -ldflags "-w -X github.com/marcuwynu23/git-policy/cmd.version=${VERSION}" \
+              -o "dist/${APP_NAME}-${goos}-${goarch}${ext}" .
+          done
           ls -la dist/
 
       - name: Publish GitHub release
