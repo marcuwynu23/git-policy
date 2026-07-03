@@ -2,16 +2,21 @@ BIN_DIR=C:\Bin\tools
 .PHONY: all build clean test lint vet fmt run install uninstall doctor validate help install-binary dev
 
 BINARY_NAME=git-policy
+BINARY_EXT=
+ifdef ComSpec
+  BINARY_EXT=.exe
+endif
 GO_BUILD=CGO_ENABLED=0 go build
-GO_FLAGS=-ldflags="-s -w"
+VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+GO_FLAGS=-ldflags="-w -X github.com/marcuwynu23/git-policy/cmd.version=$(VERSION)"
 
 all: lint vet test build
 
 build:
-	$(GO_BUILD) $(GO_FLAGS) -o $(BINARY_NAME) .
+	$(GO_BUILD) $(GO_FLAGS) -o $(BINARY_NAME)$(BINARY_EXT) .
 
 clean:
-	rm -f $(BINARY_NAME)
+	rm -f $(BINARY_NAME)$(BINARY_EXT)
 	rm -rf dist/
 
 test:
@@ -66,9 +71,10 @@ dist:
 	GOOS=linux GOARCH=arm64 $(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)-linux-arm64 .
 	GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)-darwin-amd64 .
 	GOOS=darwin GOARCH=arm64 $(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)-darwin-arm64 .
+	cp -f $(BINARY_NAME)$(BINARY_EXT) dist/
 
 install-binary: build
-	cp -f $(BINARY_NAME) $(BIN_DIR)/$(BINARY_NAME).exe
+	cp -f $(BINARY_NAME)$(BINARY_EXT) $(BIN_DIR)/$(BINARY_NAME).exe
 
 dev: build install-binary install
 	@echo "git-policy built, linked to PATH, and hooks installed."
