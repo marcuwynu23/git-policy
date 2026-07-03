@@ -6,7 +6,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)](PLAN.md)
+[![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
 No per-repo setup. No repo-based Git hooks to configure. No CI dependency.
@@ -225,8 +225,7 @@ git commit -m "feat: add env example"
 - **No Windows native hooks** — hooks run via Git Bash (shipped with
   Git for Windows). No PowerShell-based hooks.
 
-These are all on the roadmap. See [PLAN.md](PLAN.md) for the full
-development timeline.
+These are all on the roadmap.
 
 ---
 
@@ -236,7 +235,7 @@ development timeline.
 | -------------------------------------- | ------------------------------------------------------------------- |
 | **[GUIDE.md](GUIDE.md)**               | Full usage guide, configuration reference, testing, troubleshooting |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards                     |
-| **[PLAN.md](PLAN.md)**                 | Architecture, roadmap, and development plan                         |
+
 
 ---
 
