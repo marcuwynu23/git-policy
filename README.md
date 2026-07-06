@@ -1,6 +1,7 @@
 <div align="center">
+# <img title="" src="./logo/logo.svg" alt="" width="208">
 
-# git policy
+# Git Policy
 
 **Global Git rule management.** Install once, protect every repo.
 
@@ -235,7 +236,6 @@ These are all on the roadmap.
 | -------------------------------------- | ------------------------------------------------------------------- |
 | **[GUIDE.md](GUIDE.md)**               | Full usage guide, configuration reference, testing, troubleshooting |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards                     |
-
 
 ---
 
