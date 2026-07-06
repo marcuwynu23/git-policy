@@ -1,5 +1,6 @@
 <div align="center">
-# <img title="" src="./logo/logo.svg" alt="" width="208">
+
+<img title="" src="./logo/logo.svg" alt="" width="208">
 
 # Git Policy
 
