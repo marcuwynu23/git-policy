@@ -1,8 +1,6 @@
 <div align="center">
 
-<img title="" src="./logo/logo.svg" alt="" width="208">
-
-# Git Policy
+<img title="" src="./logo/logo-with-title.svg" alt="" width="208">
 
 **Global Git rule management.** Install once, protect every local repository.
 
