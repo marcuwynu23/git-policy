@@ -4,14 +4,14 @@
 
 # Git Policy
 
-**Global Git rule management.** Install once, protect every repo.
+**Global Git rule management.** Install once, protect every local repository.
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
-No per-repo setup. No repo-based Git hooks to configure. No CI dependency.
+No per-repository setup. No repository-based Git hooks to configure. No CI dependency.
 Just one global install and every repository on your machine is protected.
 
 </div>
@@ -30,7 +30,7 @@ Every developer has accidentally committed something they shouldn't:
 
 - A `.env` file with database credentials
 - An AWS secret key hardcoded in a config file
-- A 200MB binary that bloats the repo forever
+- A 200MB binary that bloats the repository forever
 - A commit directly to `main` or `production`
 - A sloppy commit message like `"fixed stuff"`
 
@@ -38,14 +38,14 @@ Existing tools like **Husky**, **Lefthook**, and **pre-commit** solve this —
 but only if you configure them **in every single repository**.
 
 git-policy flips the model: **install once globally**, and rules apply
-to every repo you work on. Zero setup per project. Zero CI configuration.
+to every repository you work on. Zero setup per project. Zero CI configuration.
 
 ### How it's different
 
 |                         | git-policy             | Husky              | Lefthook             | pre-commit                |
 | ----------------------- | ---------------------- | ------------------ | -------------------- | ------------------------- |
 | Install once globally   | Yes                    | No                 | No                   | No                        |
-| Per-repo setup needed   | **None**               | npm install + init | config file per repo | `.pre-commit-config.yaml` |
+| Per-repository setup needed   | **None**               | npm install + init | config file per repository | `.pre-commit-config.yaml` |
 | Built-in secret scanner | Yes                    | No                 | No                   | Plugin                    |
 | Built-in branch protect | Yes                    | No                 | No                   | No                        |
 | Built-in file blocking  | Yes                    | No                 | No                   | No                        |
@@ -103,7 +103,7 @@ at the one place they're cheapest to fix: the developer's keyboard.
 - **Fewer failed CI runs** — secrets, large files, and bad messages
   are filtered before `git push`
 - **Less noise in CloudWatch / Datadog / alerts** — no accidental
-  credentials making it to the repo
+  credentials making it to the repository
 - **Faster feedback loop** — developer knows in < 100ms instead
   of waiting 5-15 minutes for a CI job
 - **No CI dependency** — rules work offline, on a plane, in
@@ -160,7 +160,7 @@ git policy doctor
 git policy rule list
 
 # 4. It just works — try it
-mkdir test-repo && cd test-repo
+mkdir test-repository && cd test-repository
 git init
 echo "secret=abc" > .env
 git add .env
@@ -178,7 +178,7 @@ For detailed usage, see [GUIDE.md](GUIDE.md).
 | `install`             | Install global hooks (one-time)         |
 | `uninstall`           | Remove hooks (keeps config)             |
 | `uninstall --all`     | Remove hooks + config entirely          |
-| `run`                 | Run rules against current repo          |
+| `run`                 | Run rules against current repository          |
 | `doctor`              | Check if git-policy is set up correctly |
 | `validate`            | Check if config is valid                |
 | `rule list`           | Show all rules and on/off status        |
@@ -215,11 +215,11 @@ git commit -m "feat: add env example"
 
 ## Limitations
 
-- **No per-repo overrides** — policies are global only. You can't have
+- **No per-repository overrides** — policies are global only. You can't have
   different rules for different projects yet.
 - **No custom rules** — the plugin system is not implemented. You're
   limited to the 6 built-in rules.
-- **No remote sync** — team policy distribution via Git repo or HTTP
+- **No remote sync** — team policy distribution via Git repository or HTTP
   endpoint is planned but not available.
 - **No pre-push rules** — the pre-push hook runs policies but there
   are no push-specific checks (e.g., blocking force push).
