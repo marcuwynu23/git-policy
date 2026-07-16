@@ -308,4 +308,3 @@ Before releasing:
 
 - Open an issue on GitHub
 - See [GUIDE.md](GUIDE.md) for usage questions
-- See [PLAN.md](PLAN.md) for architecture and roadmap
