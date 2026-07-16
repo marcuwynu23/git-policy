@@ -83,7 +83,7 @@ func TestFileSizePolicy_Pass(t *testing.T) {
 	p := NewFileSizePolicy(cfg)
 	dir := t.TempDir()
 	smallFile := filepath.Join(dir, "small.txt")
-	os.WriteFile(smallFile, []byte("hello"), 0644)
+	_ = os.WriteFile(smallFile, []byte("hello"), 0644)
 	result := p.Validate(Context{StagedFiles: []string{smallFile}})
 	if result.Status != StatusPass {
 		t.Errorf("expected pass, got %s: %s", result.Status, result.Message)
@@ -113,7 +113,7 @@ func TestSecretScanPolicy_Pass(t *testing.T) {
 	p := NewSecretScanPolicy(cfg)
 	dir := t.TempDir()
 	safeFile := filepath.Join(dir, "safe.txt")
-	os.WriteFile(safeFile, []byte("hello world"), 0644)
+	_ = os.WriteFile(safeFile, []byte("hello world"), 0644)
 	result := p.Validate(Context{StagedFiles: []string{safeFile}})
 	if result.Status != StatusPass {
 		t.Errorf("expected pass, got %s: %s", result.Status, result.Message)

@@ -50,7 +50,7 @@ func TestIsOverMaxSize(t *testing.T) {
 	checker := NewChecker(nil, nil, 100)
 	dir := t.TempDir()
 	smallFile := filepath.Join(dir, "small.txt")
-	os.WriteFile(smallFile, []byte("hello"), 0644)
+	_ = os.WriteFile(smallFile, []byte("hello"), 0644)
 
 	over, size, err := checker.IsOverMaxSize(smallFile)
 	if err != nil {
