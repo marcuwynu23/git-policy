@@ -1,3 +1,4 @@
+// Package files provides file blocking, binary detection, and size checking.
 package files
 
 import (
@@ -6,12 +7,14 @@ import (
 	"strings"
 )
 
+// Checker evaluates files against blocklists and size limits.
 type Checker struct {
 	blockedPatterns []string
 	blockedExts     []string
 	maxSize         int64
 }
 
+// NewChecker creates a new Checker with the given patterns, extensions, and max size.
 func NewChecker(blockedPatterns, blockedExts []string, maxSize int64) *Checker {
 	if blockedPatterns == nil {
 		blockedPatterns = []string{".env", "*.pem", "*.key", "*.p12", "*.crt"}
@@ -29,6 +32,7 @@ func NewChecker(blockedPatterns, blockedExts []string, maxSize int64) *Checker {
 	}
 }
 
+// IsBlockedFile checks if a filename matches any blocked file pattern.
 func (c *Checker) IsBlockedFile(name string) (bool, string) {
 	base := filepath.Base(name)
 	for _, pattern := range c.blockedPatterns {
@@ -39,6 +43,7 @@ func (c *Checker) IsBlockedFile(name string) (bool, string) {
 	return false, ""
 }
 
+// IsBinaryFile checks if a filename has a blocked binary extension.
 func (c *Checker) IsBinaryFile(name string) (bool, string) {
 	ext := strings.ToLower(filepath.Ext(name))
 	for _, blocked := range c.blockedExts {
@@ -49,6 +54,7 @@ func (c *Checker) IsBinaryFile(name string) (bool, string) {
 	return false, ""
 }
 
+// IsOverMaxSize checks if a file exceeds the configured maximum size.
 func (c *Checker) IsOverMaxSize(path string) (bool, int64, error) {
 	info, err := os.Stat(path)
 	if err != nil {

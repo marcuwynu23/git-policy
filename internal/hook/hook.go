@@ -1,3 +1,4 @@
+// Package hook manages installation and removal of global Git hooks.
 package hook
 
 import (
@@ -11,10 +12,12 @@ import (
 	"github.com/marcuwynu23/git-policy/internal/config"
 )
 
+// Installer manages global Git hook installation and removal.
 type Installer struct {
 	cfg *config.Config
 }
 
+// NewInstaller creates a new Installer.
 func NewInstaller() *Installer {
 	return &Installer{}
 }
@@ -36,6 +39,7 @@ func (i *Installer) globalHookDir() (string, error) {
 	return filepath.Join(base, "git-policy", "hooks"), nil
 }
 
+// InstallGlobal writes hook scripts and sets core.hooksPath globally.
 func (i *Installer) InstallGlobal() error {
 	hookDir, err := i.globalHookDir()
 	if err != nil {
@@ -82,6 +86,7 @@ func (i *Installer) globalConfigDir() (string, error) {
 	return filepath.Join(base, "git-policy"), nil
 }
 
+// UninstallGlobal removes hook files and unsets core.hooksPath.
 func (i *Installer) UninstallGlobal() error {
 	hookDir, err := i.globalHookDir()
 	if err != nil {
@@ -113,6 +118,7 @@ func (i *Installer) UninstallGlobal() error {
 	return nil
 }
 
+// UninstallAll removes hooks, config file, and config directory.
 func (i *Installer) UninstallAll() error {
 	if err := i.UninstallGlobal(); err != nil {
 		return err
@@ -132,6 +138,7 @@ func (i *Installer) UninstallAll() error {
 	return nil
 }
 
+// IsInstalled checks whether global git-policy hooks are currently installed.
 func (i *Installer) IsInstalled() bool {
 	cmd := exec.Command("git", "config", "--global", "core.hooksPath")
 	output, err := cmd.Output()

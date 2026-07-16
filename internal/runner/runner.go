@@ -1,3 +1,4 @@
+// Package runner wires Git context into the policy engine and executes all policies.
 package runner
 
 import (
@@ -10,6 +11,8 @@ import (
 	"github.com/marcuwynu23/git-policy/internal/policy"
 )
 
+// Run loads staged files and branch info from Git, then executes all
+// enabled policies against them.
 func Run(cfg *config.Config) error {
 	if !git.IsRepo() {
 		fmt.Fprintln(os.Stderr, "Not a git repository.")
