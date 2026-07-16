@@ -1,91 +1,80 @@
-# Release Notes — v1.0.0
+# Release Notes
 
-**Release date:** 2026-07-03
+## Version
 
-git-policy is a cross-platform CLI that provides global Git rule management.
-Install once and protect every repository on your machine — block secrets,
-enforce commit conventions, protect branches, reject large files, and more.
+v1.0.0
 
----
+## Release Date
 
-## What's New
-
-### Global Git Hook Management
-
-No per-repo setup, no `npm install`, no CI dependency. Run `git-policy install`
-once and every repository on your machine is protected.
-
-### 6 Built-in Rules
-
-| Rule | What it does |
-|------|-------------|
-| **BlockFiles** | Prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable) |
-| **SecretScan** | Detects AWS keys, GitHub PATs, OpenAI keys, Stripe keys, Slack tokens, JWTs, and more |
-| **BranchProtection** | Blocks direct commits to `main`, `master`, `production` (configurable) |
-| **CommitMessage** | Enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc. |
-| **FileSize** | Rejects files over the configured limit (default 10MB) |
-| **BinaryFile** | Blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed |
-
-Each rule can be enabled/disabled via CLI or config file.
-
-### CLI Commands
-
-```bash
-git-policy install          # Install global hooks
-git-policy uninstall        # Remove hooks
-git-policy uninstall --all  # Remove hooks + config
-git-policy run              # Run rules against current repo
-git-policy doctor           # Check system health
-git-policy validate         # Validate config
-git-policy rule list        # Show rules with status
-git-policy rule enable      # Enable a rule
-git-policy rule disable     # Disable a rule
-git-policy version          # Print version
-```
-
-### Configuration
-
-Single YAML file at `~/.config/git-policy/config.yaml` (Linux/macOS) or
-`%APPDATA%\git-policy\config.yaml` (Windows). Sensible defaults if no
-config file exists.
+2026-07-16
 
 ---
 
-## Breaking Changes
+## Features
 
-None — this is the initial release.
+- Add initial changelog for project documentation
+- Add comprehensive user guide for git-policy
+- Add example config, sample hooks, and test data
+- Add dedicated packages for sync.
+- Add dedicated packages for plugins.
+- Add dedicated packages for  branch.
+- Add dedicated packages for commitmsg.
+- Add dedicated packages for files.
+- Add dedicated packages for secrets.
+-  **cmd:**Add CLI commands (install, uninstall, run, doctor, validate, version, rule)
+-  **runner:**Wire Git context into policy engine
+-  **hook:**Add global Git hook installer and uninstaller
+-  **engine:**Add policy execution engine with disabled-rule support
+-  **policy:**Implement Policy interface and 6 built-in rules
+-  **git:**Add Git CLI wrappers
+- Add logger and path utilities
+-  **config:**Add YAML config loading and defaults
+- Scaffold Go module with Makefile
+- Initial commit
+- Add GitHub Actions workflow for release process
 
----
+## Bug Fixes
 
-## Known Issues
+- Rename release job to build and update artifact handling in workflow
+- Update build command to correctly set version variable in release workflow
+- Update Makefile to handle binary extension and versioning
+- Update version to development stage
 
-- **No per-repo overrides** — rules are global only
-- **No custom rules** — plugin system not yet available
-- **No remote sync** — team policy distribution not yet supported
-- **No pre-push specific rules** — push-only checks not yet implemented
+## Documentation
 
----
+- Add release notes for version 1.0.0
+- Remove link to PLAN.md from README.md and clarify roadmap section
+- Update license badge to Apache 2.0 and add limitations and community sections in README.md
+- Update LICENSE to Apache License 2.0 with detailed terms and conditions
+- Update README.md to correct project name and enhance command examples
+- Enhance README.md with additional alignment and badge formatting
+- Add comprehensive README.md to outline git-policy features and usage
+- Create RELEASE-NOTES.md to document project changes and guidelines
+- Add SECURITY.md to outline security policy and supported versions
+- Add MIT License to the project
+- Add pull request template to standardize contributions
+- Add FUNDING.yml to support project funding options
+- Add issue templates for bug reports and feature requests
+- Add Code of Conduct to establish community standards and expectations
+- Add contributing guidelines and project structure documentation
+- Add SUPPORT.md with documentation, issue reporting, discussions, and security guidelines
+- Update links in Community section to remove .github prefix
 
-## Installation
+## Refactoring
 
-```bash
-# From source
-git clone https://github.com/marcuwynu23/git-policy
-cd git-policy
-make dev
+- Remove unused commit message retrieval in Run function
 
-# Or download a pre-built binary from the release
-```
+## CI/CD
+
+- Rename build job to release and consolidate artifact building steps
+- Add GitHub Actions workflow for testing Go code
+
+## Maintenance
+
+- Add .gitignore file to exclude build artifacts and IDE settings
 
 ## Contributors
 
-- Mark Wayne Menorca
+- Mark Wayne Buncaras Menorca (45 commits)
+- Mark Wayne Menorca (4 commits)
 
----
-
-## Links
-
-- [GitHub Repository](https://github.com/marcuwynu23/git-policy)
-- [Changelog](../../../CHANGELOG.md)
-- [Documentation](../../../GUIDE.md)
-- [Contributing](../../../CONTRIBUTING.md)
