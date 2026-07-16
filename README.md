@@ -8,6 +8,8 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+[![CI](https://github.com/marcuwynu23/git-policy/actions/workflows/test.yml/badge.svg)](https://github.com/marcuwynu23/git-policy/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/marcuwynu23/git-policy/graph/badge.svg)](https://codecov.io/gh/marcuwynu23/git-policy)
 
 No per-repository setup. No repository-based Git hooks to configure. No CI dependency.
 Just one global install and every repository on your machine is protected.
@@ -106,13 +108,6 @@ at the one place they're cheapest to fix: the developer's keyboard.
   of waiting 5-15 minutes for a CI job
 - **No CI dependency** — rules work offline, on a plane, in
   an airgapped environment
-
-### Open Source Maintainer
-
-Contributors come and go. You can't enforce that everyone installs
-a specific tool. With global git-policy, at least **you** are protected
-from accidental secret leaks or bad commits, regardless of which
-project you're working on.
 
 ---
 
@@ -235,6 +230,8 @@ These are all on the roadmap.
 | -------------------------------------- | ------------------------------------------------------------------- |
 | **[GUIDE.md](GUIDE.md)**               | Full usage guide, configuration reference, testing, troubleshooting |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards                     |
+| **[MAINTAINERS.md](MAINTAINERS.md)**   | Project maintainers                                                 |
+| **[CONTRIBUTORS.md](CONTRIBUTORS.md)** | List of contributors                                                |
 
 ---
 
