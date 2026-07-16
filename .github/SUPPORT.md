@@ -15,6 +15,8 @@
 
 For questions, ideas, or general help, start a discussion on GitHub.
 
+👉 [github.com/marcuwynu23/git-policy/discussions](https://github.com/marcuwynu23/git-policy/discussions)
+
 ## Security
 
 Report security vulnerabilities to the project maintainers privately.
