@@ -235,6 +235,8 @@ These are all on the roadmap.
 | -------------------------------------- | ------------------------------------------------------------------- |
 | **[GUIDE.md](GUIDE.md)**               | Full usage guide, configuration reference, testing, troubleshooting |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards                     |
+| **[MAINTAINERS.md](MAINTAINERS.md)**   | Project maintainers                                                 |
+| **[CONTRIBUTORS.md](CONTRIBUTORS.md)** | List of contributors                                                |
 
 ---
 
