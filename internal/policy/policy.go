@@ -176,7 +176,7 @@ func (p *FileSizePolicy) Validate(ctx Context) Result {
 				PolicyName: p.Name(),
 				Status:     StatusFail,
 				Message:    fmt.Sprintf("File %s is %d bytes (max %d bytes)", file, info.Size(), maxSize),
-				Fix:        fmt.Sprintf("Reduce file size or increase maxFileSize in config"),
+				Fix:        "Reduce file size or increase maxFileSize in config",
 			}
 		}
 	}

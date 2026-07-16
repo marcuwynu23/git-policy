@@ -9,7 +9,7 @@ import (
 func TestFileExists(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "test.txt")
-	os.WriteFile(file, []byte("hello"), 0644)
+	_ = os.WriteFile(file, []byte("hello"), 0644)
 
 	if !FileExists(file) {
 		t.Error("expected file to exist")

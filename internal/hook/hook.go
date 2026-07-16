@@ -8,14 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/marcuwynu23/git-policy/internal/config"
 )
 
 // Installer manages global Git hook installation and removal.
-type Installer struct {
-	cfg *config.Config
-}
+type Installer struct{}
 
 // NewInstaller creates a new Installer.
 func NewInstaller() *Installer {
@@ -109,12 +105,12 @@ func (i *Installer) UninstallGlobal() error {
 	if err == nil {
 		entries, _ := os.ReadDir(cfgDir)
 		if len(entries) == 0 {
-			os.Remove(cfgDir)
+			_ = os.Remove(cfgDir)
 		}
 	}
 
 	cmd := exec.Command("git", "config", "--global", "--unset", "core.hooksPath")
-	cmd.Run()
+	_ = cmd.Run()
 	return nil
 }
 
@@ -134,7 +130,7 @@ func (i *Installer) UninstallAll() error {
 		return fmt.Errorf("removing config: %w", err)
 	}
 
-	os.Remove(cfgDir)
+	_ = os.Remove(cfgDir)
 	return nil
 }
 

@@ -18,7 +18,7 @@ Install once and protect every repository on your machine with policies
 for blocking secrets, enforcing commit conventions, protecting branches,
 and more.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

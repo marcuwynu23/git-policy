@@ -84,13 +84,13 @@ func TestVersionCommand(t *testing.T) {
 	os.Stdout = w
 
 	rootCmd.SetArgs([]string{"version"})
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 
 	w.Close()
 	os.Stdout = old
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if !strings.Contains(output, "git-policy vdev") {

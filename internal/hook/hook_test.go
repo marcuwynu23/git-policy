@@ -153,7 +153,7 @@ func TestUninstallAll(t *testing.T) {
 	}
 
 	inst := NewInstaller()
-	inst.InstallGlobal()
+	_ = inst.InstallGlobal()
 
 	err := inst.UninstallAll()
 	if err != nil {

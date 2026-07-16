@@ -27,8 +27,8 @@ func TestIsRepo(t *testing.T) {
 func TestIsRepo_NotARepo(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	if IsRepo() {
 		t.Error("expected temp dir not to be a git repo")
@@ -38,10 +38,10 @@ func TestIsRepo_NotARepo(t *testing.T) {
 func TestGetBranchName(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	initRepo(t, dir)
-	os.Chdir(dir)
+	_ = os.Chdir(dir)
 
 	branch, err := GetBranchName()
 	if err != nil {
@@ -55,10 +55,10 @@ func TestGetBranchName(t *testing.T) {
 func TestGetStagedFiles_Empty(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	initRepo(t, dir)
-	os.Chdir(dir)
+	_ = os.Chdir(dir)
 
 	files, err := GetStagedFiles()
 	if err != nil {
@@ -72,14 +72,14 @@ func TestGetStagedFiles_Empty(t *testing.T) {
 func TestGetStagedFiles_WithFiles(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	initRepo(t, dir)
-	os.Chdir(dir)
+	_ = os.Chdir(dir)
 
 	newFile := filepath.Join(dir, "new.txt")
-	os.WriteFile(newFile, []byte("hello"), 0644)
-	exec.Command("git", "add", "new.txt").Run()
+	_ = os.WriteFile(newFile, []byte("hello"), 0644)
+	_ = exec.Command("git", "add", "new.txt").Run()
 
 	files, err := GetStagedFiles()
 	if err != nil {
@@ -103,10 +103,10 @@ func TestGetStagedFiles_WithFiles(t *testing.T) {
 func TestGetCommitMsgFile(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	initRepo(t, dir)
-	os.Chdir(dir)
+	_ = os.Chdir(dir)
 
 	path, err := GetCommitMsgFile()
 	if err != nil {
@@ -125,10 +125,10 @@ func TestGetCommitMsgFile(t *testing.T) {
 func TestGetCommitMessage(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	initRepo(t, dir)
-	os.Chdir(dir)
+	_ = os.Chdir(dir)
 
 	msg, err := GetCommitMessage()
 	if err != nil {
@@ -147,12 +147,12 @@ func initRepo(t *testing.T, dir string) {
 		t.Fatalf("git init failed: %s: %v", string(out), err)
 	}
 
-	exec.Command("git", "-C", dir, "config", "user.email", "test@test.com").Run()
-	exec.Command("git", "-C", dir, "config", "user.name", "Test").Run()
-	exec.Command("git", "-C", dir, "config", "commit.gpgSign", "false").Run()
+	_ = exec.Command("git", "-C", dir, "config", "user.email", "test@test.com").Run()
+	_ = exec.Command("git", "-C", dir, "config", "user.name", "Test").Run()
+	_ = exec.Command("git", "-C", dir, "config", "commit.gpgSign", "false").Run()
 
 	readme := filepath.Join(dir, "README.md")
-	os.WriteFile(readme, []byte("# test"), 0644)
-	exec.Command("git", "-C", dir, "add", "README.md").Run()
-	exec.Command("git", "-C", dir, "commit", "-m", "feat: initial commit").Run()
+	_ = os.WriteFile(readme, []byte("# test"), 0644)
+	_ = exec.Command("git", "-C", dir, "add", "README.md").Run()
+	_ = exec.Command("git", "-C", dir, "commit", "-m", "feat: initial commit").Run()
 }
