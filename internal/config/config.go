@@ -1,3 +1,4 @@
+// Package config handles loading, saving, and managing git-policy configuration.
 package config
 
 import (
@@ -9,12 +10,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Config represents the complete git-policy configuration.
 type Config struct {
-	Version  int      `yaml:"version"`
-	Hooks    HooksConfig    `yaml:"hooks"`
+	Version  int           `yaml:"version"`
+	Hooks    HooksConfig   `yaml:"hooks"`
 	Policies PoliciesConfig `yaml:"policies"`
 }
 
+// HooksConfig controls which Git hooks are enabled.
 type HooksConfig struct {
 	PreCommit  HookConfig `yaml:"pre-commit"`
 	CommitMsg  HookConfig `yaml:"commit-msg"`
@@ -22,10 +25,12 @@ type HooksConfig struct {
 	PostMerge  HookConfig `yaml:"post-merge"`
 }
 
+// HookConfig controls a single Git hook's enabled state.
 type HookConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+// PoliciesConfig holds all configurable policy settings.
 type PoliciesConfig struct {
 	BlockFiles          []string `yaml:"blockFiles"`
 	MaxFileSize         string   `yaml:"maxFileSize"`
@@ -37,6 +42,7 @@ type PoliciesConfig struct {
 	DisabledPolicies    []string `yaml:"disabledPolicies"`
 }
 
+// PolicyNames maps CLI-friendly policy names to their internal names.
 var PolicyNames = map[string]string{
 	"block-files":        "BlockFiles",
 	"commit-message":     "CommitMessage",
@@ -46,6 +52,7 @@ var PolicyNames = map[string]string{
 	"branch-protection":  "BranchProtection",
 }
 
+// PolicyCLIName returns the CLI-friendly name for a given internal policy name.
 func PolicyCLIName(internalName string) string {
 	for cli, internal := range PolicyNames {
 		if internal == internalName {
@@ -55,6 +62,7 @@ func PolicyCLIName(internalName string) string {
 	return internalName
 }
 
+// IsDisabled checks if a named policy is in the disabled list.
 func (p *PoliciesConfig) IsDisabled(name string) bool {
 	for _, d := range p.DisabledPolicies {
 		if d == name {
@@ -64,6 +72,7 @@ func (p *PoliciesConfig) IsDisabled(name string) bool {
 	return false
 }
 
+// SetDisabled adds or removes a policy from the disabled list.
 func (p *PoliciesConfig) SetDisabled(name string, disabled bool) {
 	if disabled {
 		for _, d := range p.DisabledPolicies {
@@ -83,6 +92,7 @@ func (p *PoliciesConfig) SetDisabled(name string, disabled bool) {
 	}
 }
 
+// DefaultConfig returns a configuration with sensible default values.
 func DefaultConfig() *Config {
 	return &Config{
 		Version: 1,
@@ -104,6 +114,7 @@ func DefaultConfig() *Config {
 	}
 }
 
+// DefaultConfigPath returns the default OS-specific path for the config file.
 func DefaultConfigPath() (string, error) {
 	var dir string
 	switch runtime.GOOS {
@@ -121,6 +132,7 @@ func DefaultConfigPath() (string, error) {
 	return filepath.Join(dir, "git-policy", "config.yaml"), nil
 }
 
+// Load reads and parses a YAML config file, falling back to defaults if needed.
 func Load(path string) (*Config, error) {
 	if path == "" {
 		var err error
@@ -143,6 +155,7 @@ func Load(path string) (*Config, error) {
 	return &cfg, nil
 }
 
+// Save writes a config to the specified file path as YAML.
 func Save(cfg *Config, path string) error {
 	data, err := yaml.Marshal(cfg)
 	if err != nil {

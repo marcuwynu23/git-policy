@@ -1,3 +1,4 @@
+// Package utils provides shared utility functions used across the project.
 package utils
 
 import (
@@ -7,6 +8,7 @@ import (
 	"runtime"
 )
 
+// ConfigDir returns the OS-specific path to the git-policy config directory.
 func ConfigDir() (string, error) {
 	var base string
 	switch runtime.GOOS {
@@ -24,6 +26,7 @@ func ConfigDir() (string, error) {
 	return filepath.Join(base, "git-policy"), nil
 }
 
+// HookDir returns the OS-specific path to the git-policy hooks directory.
 func HookDir() (string, error) {
 	cfgDir, err := ConfigDir()
 	if err != nil {
@@ -32,11 +35,13 @@ func HookDir() (string, error) {
 	return filepath.Join(cfgDir, "hooks"), nil
 }
 
+// FileExists checks whether a file exists at the given path.
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+// EnsureDir creates a directory and all parents if they don't already exist.
 func EnsureDir(path string) error {
 	return os.MkdirAll(path, 0755)
 }

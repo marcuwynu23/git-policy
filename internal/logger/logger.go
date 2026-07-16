@@ -1,3 +1,4 @@
+// Package logger provides structured logging via slog.
 package logger
 
 import (
@@ -7,6 +8,7 @@ import (
 	"strings"
 )
 
+// Level defines a log severity level.
 type Level string
 
 const (
@@ -16,6 +18,7 @@ const (
 	LevelError Level = "error"
 )
 
+// New creates a new slog.Logger with the specified level and output writer.
 func New(level Level, w io.Writer) *slog.Logger {
 	if w == nil {
 		w = os.Stderr

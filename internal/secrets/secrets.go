@@ -1,3 +1,4 @@
+// Package secrets provides secret pattern scanning for staged files.
 package secrets
 
 import (
@@ -6,11 +7,13 @@ import (
 	"strings"
 )
 
+// Pattern defines a secret pattern to detect in files.
 type Pattern struct {
 	Name   string
 	Prefix string
 }
 
+// DefaultPatterns is the built-in list of secret patterns to scan for.
 var DefaultPatterns = []Pattern{
 	{Name: "AWS Access Key ID", Prefix: "AKIA"},
 	{Name: "AWS Secret Access Key", Prefix: "SecretAccessKey"},
@@ -25,10 +28,12 @@ var DefaultPatterns = []Pattern{
 	{Name: "JWT", Prefix: "eyJ"},
 }
 
+// Finder scans files for secret patterns.
 type Finder struct {
 	patterns []Pattern
 }
 
+// NewFinder creates a new Finder with the given patterns (defaults if nil).
 func NewFinder(patterns []Pattern) *Finder {
 	if patterns == nil {
 		patterns = DefaultPatterns
@@ -36,12 +41,14 @@ func NewFinder(patterns []Pattern) *Finder {
 	return &Finder{patterns: patterns}
 }
 
+// Finding represents a single secret match in a file.
 type Finding struct {
 	Pattern Pattern
 	File    string
 	Line    int
 }
 
+// ScanFile scans a single file for secret patterns and returns all findings.
 func (f *Finder) ScanFile(path string) ([]Finding, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -68,6 +75,7 @@ func (f *Finder) ScanFile(path string) ([]Finding, error) {
 	return findings, scanner.Err()
 }
 
+// ScanFiles scans multiple files and aggregates all secret findings.
 func (f *Finder) ScanFiles(files []string) ([]Finding, error) {
 	var all []Finding
 	for _, file := range files {
