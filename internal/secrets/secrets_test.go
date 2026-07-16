@@ -9,7 +9,7 @@ import (
 func TestScanFile_NoSecrets(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "safe.txt")
-	os.WriteFile(file, []byte("hello world\nthis is safe"), 0644)
+	_ = os.WriteFile(file, []byte("hello world\nthis is safe"), 0644)
 
 	finder := NewFinder(nil)
 	findings, err := finder.ScanFile(file)
@@ -24,7 +24,7 @@ func TestScanFile_NoSecrets(t *testing.T) {
 func TestScanFile_WithSecrets(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "secret.txt")
-	os.WriteFile(file, []byte("aws_key=AKIA1234567890\n"), 0644)
+	_ = os.WriteFile(file, []byte("aws_key=AKIA1234567890\n"), 0644)
 
 	finder := NewFinder(nil)
 	findings, err := finder.ScanFile(file)

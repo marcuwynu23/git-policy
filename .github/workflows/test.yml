@@ -24,12 +24,12 @@ jobs:
           cache: true
 
       - name: Run tests with coverage
-        run: go test -v -count=1 -coverprofile=coverage.out -covermode=atomic ./...
+        run: go test -v -count=1 -coverprofile=${{ runner.temp }}/coverage.out -covermode=atomic ./...
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.out
+          file: ${{ runner.temp }}/coverage.out
           fail_ci_if_error: false
 
   lint:

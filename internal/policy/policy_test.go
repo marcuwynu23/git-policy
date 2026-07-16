@@ -125,7 +125,7 @@ func TestSecretScanPolicy_Fail(t *testing.T) {
 	p := NewSecretScanPolicy(cfg)
 	dir := t.TempDir()
 	secretFile := filepath.Join(dir, "secret.txt")
-	os.WriteFile(secretFile, []byte("AKIA1234567890"), 0644)
+	_ = os.WriteFile(secretFile, []byte("AKIA1234567890"), 0644)
 	result := p.Validate(Context{StagedFiles: []string{secretFile}})
 	if result.Status != StatusFail {
 		t.Errorf("expected fail, got %s", result.Status)
