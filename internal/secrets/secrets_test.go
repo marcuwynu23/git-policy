@@ -43,8 +43,8 @@ func TestScanFiles_Multiple(t *testing.T) {
 	dir := t.TempDir()
 	f1 := filepath.Join(dir, "f1.txt")
 	f2 := filepath.Join(dir, "f2.txt")
-	os.WriteFile(f1, []byte("ghp_abcdefghijklmnop"), 0644)
-	os.WriteFile(f2, []byte("safe content"), 0644)
+	_ = os.WriteFile(f1, []byte("ghp_abcdefghijklmnop"), 0644)
+	_ = os.WriteFile(f2, []byte("safe content"), 0644)
 
 	finder := NewFinder(nil)
 	findings, err := finder.ScanFiles([]string{f1, f2})
