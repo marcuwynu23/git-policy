@@ -44,9 +44,35 @@ Track git-policy activity per repository — what rules ran, what passed, what w
 - [ ] `git-policy history --status pass|fail` — filter results by outcome
 - [ ] Enable/disable via config: `history.enabled: true` in `config.yaml`
 - [ ] Configurable retention: `history.maxRecords: 1000` in `config.yaml`
-- [ ] Storage: append-only JSON log per repository at `<config-dir>/history/<repo-hash>.json`
+- [ ] Storage: append-only JSONL per repository at `<config-dir>/history/<repo-hash>.jsonl`
 - [ ] Auto-log on every `git-policy run` — records date, repo path, branch, each rule name + status + message
 - [ ] `git-policy history --clear` — wipe all history for the current repository
+
+**Log format (JSONL — one JSON object per line):**
+
+```json
+{
+  "timestamp": "2026-07-22T14:30:00Z",
+  "repo":    "/home/user/projects/my-app",
+  "branch":  "feature/login",
+  "commit":  "abc1234",
+  "results": [
+    {"rule": "BlockFiles",     "status": "pass"},
+    {"rule": "SecretScan",    "status": "pass"},
+    {"rule": "BranchProtection", "status": "pass"},
+    {"rule": "CommitMessage", "status": "fail", "message": "Commit message does not follow conventional commits: fixed bug"}
+  ],
+  "overall": "fail"
+}
+```
+
+Fields:
+- `timestamp` — ISO 8601 UTC
+- `repo` — absolute path to the repository
+- `branch` — branch name at time of run
+- `commit` — short commit hash (if available)
+- `results` — array of per-rule outcomes; each entry has `rule`, `status`, and optional `message` on failure
+- `overall` — `"pass"` if all rules passed, `"fail"` otherwise
 
 ### Plugin System (YAML-Driven Custom Rules)
 
