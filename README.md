@@ -177,6 +177,7 @@ For detailed usage, see [GUIDE.md](GUIDE.md).
 | `rule list`           | Show all rules and on/off status        |
 | `rule enable <name>`  | Turn a rule on                          |
 | `rule disable <name>` | Turn a rule off                         |
+| `rule skip <name>`    | Skip a rule for the current commit (auto-clears on success) |
 
 > `policy` may be used in place of `rule` (e.g. `git-policy policy list`) as an accepted alias.
 
