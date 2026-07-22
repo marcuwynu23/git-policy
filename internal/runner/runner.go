@@ -14,8 +14,8 @@ import (
 )
 
 // Run loads staged files and branch info from Git, then executes all
-// enabled policies against them.
-func Run(cfg *config.Config) error {
+// enabled policies against them. configPath is used to resolve relative plugin paths.
+func Run(cfg *config.Config, configPath string) error {
 	if !git.IsRepo() {
 		fmt.Fprintln(os.Stderr, "Not a git repository.")
 		os.Exit(1)
@@ -43,7 +43,7 @@ func Run(cfg *config.Config) error {
 	eng.Register(policy.NewSecretScanPolicy(cfg))
 	eng.Register(policy.NewBranchPolicy(cfg))
 
-	if err := registerPluginPolicies(cfg, eng); err != nil {
+	if err := registerPluginPolicies(cfg, configPath, eng); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: plugin load failed: %v\n", err)
 	}
 
@@ -79,12 +79,13 @@ func Run(cfg *config.Config) error {
 }
 
 // registerPluginPolicies loads all enabled plugins and registers their policies.
-func registerPluginPolicies(cfg *config.Config, eng *engine.Engine) error {
+func registerPluginPolicies(cfg *config.Config, configPath string, eng *engine.Engine) error {
 	if len(cfg.Plugins) == 0 {
 		return nil
 	}
 	loader := plugins.NewLoader()
-	policies, err := loader.PoliciesFromPlugins(cfg.Plugins)
+	configDir := config.ConfigDir(configPath)
+	policies, err := loader.PoliciesFromPlugins(cfg.Plugins, configDir)
 	if err != nil {
 		return err
 	}

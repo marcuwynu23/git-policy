@@ -20,7 +20,7 @@ your repository against configured policies.`,
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
-		return runner.Run(cfg)
+		return runner.Run(cfg, cfgFile)
 	},
 }
 
