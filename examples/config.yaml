@@ -1,5 +1,9 @@
 version: 1
 
+history:
+  enabled: true
+  maxRecords: 1000
+
 hooks:
   pre-commit:
     enabled: true
@@ -12,29 +16,29 @@ hooks:
 
 policies:
   blockFiles:
-    - ".env"
-    - "*.pem"
-    - "*.key"
-    - "*.p12"
-    - "*.crt"
+  - ".env"
+  - "*.pem"
+  - "*.key"
+  - "*.p12"
+  - "*.crt"
   maxFileSize: "10MB"
   secretScan: true
   protectedBranches:
-    - main
-    - master
-    - production
+  - main
+  - master
+  - production
   conventionalCommits: true
   blockBinaries:
-    - ".exe"
-    - ".dll"
-    - ".so"
-    - ".iso"
-    - ".zip"
+  - ".exe"
+  - ".dll"
+  - ".so"
+  - ".iso"
+  - ".zip"
   requiredFiles:
-    - README.md
-    - LICENSE
+  - README.md
+  - LICENSE
 
 plugins:
-  - name: team-rules
-    path: /path/to/team-rules.yaml
-    enabled: true
+- name: team-rules
+  path: /path/to/team-rules.yaml
+  enabled: true

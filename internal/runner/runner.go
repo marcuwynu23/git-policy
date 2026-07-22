@@ -9,6 +9,7 @@ import (
 	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/marcuwynu23/git-policy/internal/engine"
 	"github.com/marcuwynu23/git-policy/internal/git"
+	"github.com/marcuwynu23/git-policy/internal/history"
 	"github.com/marcuwynu23/git-policy/internal/plugins"
 	"github.com/marcuwynu23/git-policy/internal/policy"
 )
@@ -56,6 +57,9 @@ func Run(cfg *config.Config, configPath string) error {
 		StagedFiles: stagedFiles,
 		BranchName:  branchName,
 	})
+
+	// Log history
+	_ = history.Log(cfg, configPath, results)
 
 	hasErrors := false
 	for _, result := range results {

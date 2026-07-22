@@ -27,11 +27,18 @@ type PluginEntry struct {
 	Enabled bool   `yaml:"enabled"`
 }
 
+// HistoryConfig controls git-policy history storage and behavior.
+type HistoryConfig struct {
+	Enabled    bool `yaml:"enabled"`
+	MaxRecords int  `yaml:"maxRecords"`
+}
+
 // Config represents the complete git-policy configuration.
 type Config struct {
 	Version     int             `yaml:"version"`
 	Hooks       HooksConfig     `yaml:"hooks"`
 	Policies    PoliciesConfig  `yaml:"policies"`
+	History     HistoryConfig   `yaml:"history,omitempty"`
 	CustomRules []CustomRuleDef `yaml:"customRules,omitempty"`
 	Plugins     []PluginEntry   `yaml:"plugins,omitempty"`
 }
@@ -210,6 +217,11 @@ func LoadPluginDescriptor(path string) (*PluginDescriptor, error) {
 	return &desc, nil
 }
 
+// HistoryDir returns the history directory within the config directory.
+func HistoryDir(configPath string) string {
+	return filepath.Join(ConfigDir(configPath), "history")
+}
+
 // DefaultConfig returns a configuration with sensible default values.
 func DefaultConfig() *Config {
 	return &Config{
@@ -228,6 +240,10 @@ func DefaultConfig() *Config {
 			ConventionalCommits: true,
 			BlockBinaries:       []string{".exe", ".dll", ".so", ".iso", ".zip"},
 			RequiredFiles:       []string{"README.md", "LICENSE"},
+		},
+		History: HistoryConfig{
+			Enabled:    true,
+			MaxRecords: 1000,
 		},
 	}
 }
