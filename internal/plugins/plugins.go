@@ -2,6 +2,8 @@
 package plugins
 
 import (
+	"fmt"
+
 	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/marcuwynu23/git-policy/internal/policy"
 )
@@ -24,13 +26,18 @@ func (l *Loader) PoliciesFromRules(rules []config.CustomRuleDef) []policy.Policy
 }
 
 // PoliciesFromPlugins creates Policy instances from all enabled plugin entries.
-func (l *Loader) PoliciesFromPlugins(entries []config.PluginEntry) []policy.Policy {
+// Each entry's Path is loaded as a plugin descriptor YAML file.
+func (l *Loader) PoliciesFromPlugins(entries []config.PluginEntry) ([]policy.Policy, error) {
 	var all []policy.Policy
 	for _, entry := range entries {
 		if !entry.Enabled {
 			continue
 		}
-		all = append(all, l.PoliciesFromRules(entry.Rules)...)
+		desc, err := config.LoadPluginDescriptor(entry.Path)
+		if err != nil {
+			return nil, fmt.Errorf("plugin %q: %w", entry.Name, err)
+		}
+		all = append(all, l.PoliciesFromRules(desc.Rules)...)
 	}
-	return all
+	return all, nil
 }
