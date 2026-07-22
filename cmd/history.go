@@ -20,9 +20,13 @@ func init() {
 			status, _ := cmd.Flags().GetString("status")
 			clear, _ := cmd.Flags().GetBool("clear")
 
-			cfgPath, err := config.DefaultConfigPath()
-			if err != nil {
-				cfgPath = ""
+			cfgPath := cfgFile
+			if cfgPath == "" {
+				var err error
+				cfgPath, err = config.DefaultConfigPath()
+				if err != nil {
+					cfgPath = ""
+				}
 			}
 			cfg, _ := config.Load(cfgPath)
 			if clear {
