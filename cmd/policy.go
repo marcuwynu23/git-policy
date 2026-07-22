@@ -158,16 +158,31 @@ var pluginsInstallCmd = &cobra.Command{
 	Short: "Install a plugin from a YAML descriptor file",
 	Long: `Install a plugin from a YAML descriptor file.
 
-The descriptor file defines the plugin name and path to the .so file:
+The descriptor file defines the plugin name and custom rules:
 
-  name: my-plugin
-  path: /path/to/my-plugin.so
-  enabled: true
+  name: my-custom-rules
+  rules:
+    - name: no-todo
+      type: file-content
+      pattern: "TODO:"
+      message: "Commits containing TODO are not allowed"
+      fix: "Resolve the TODO before committing"
+
+Supported rule types:
+  file-block      Block files matching a glob pattern
+  file-content    Scan file contents for a string pattern
+  branch-name     Block commits to branches matching a pattern
+  commit-message  Block commits with messages matching a pattern
+
+Use --disabled to install the plugin with all rules disabled by default.
 
 Example:
-  git-policy plugins install ./my-plugin.yaml`,
+  git-policy plugins install ./my-plugin.yaml
+  git-policy plugins install --disabled ./my-plugin.yaml`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		disabled, _ := cmd.Flags().GetBool("disabled")
+
 		desc, err := config.LoadPluginDescriptor(args[0])
 		if err != nil {
 			return err
@@ -189,15 +204,55 @@ Example:
 
 		cfg.AddPlugin(config.PluginEntry{
 			Name:    desc.Name,
-			Path:    desc.Path,
-			Enabled: desc.Enabled,
+			Enabled: !disabled,
+			Rules:   desc.Rules,
 		})
 
 		if err := config.Save(cfg, path); err != nil {
 			return fmt.Errorf("saving config: %w", err)
 		}
 
-		cmd.Printf("Plugin %q installed.\n", desc.Name)
+		status := "enabled"
+		if disabled {
+			status = "disabled"
+		}
+		cmd.Printf("Plugin %q installed (%d rules, %s).\n", desc.Name, len(desc.Rules), status)
+		return nil
+	},
+}
+
+var pluginsUninstallCmd = &cobra.Command{
+	Use:   "uninstall [name]",
+	Short: "Uninstall a plugin by name",
+	Long: `Remove a plugin and all its rules from the configuration.
+
+Example:
+  git-policy plugins uninstall my-custom-rules`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		if !cfg.RemovePlugin(args[0]) {
+			return fmt.Errorf("plugin %q not found", args[0])
+		}
+
+		if err := config.Save(cfg, path); err != nil {
+			return fmt.Errorf("saving config: %w", err)
+		}
+
+		cmd.Printf("Plugin %q uninstalled.\n", args[0])
 		return nil
 	},
 }
@@ -332,7 +387,8 @@ var pluginsListCmd = &cobra.Command{
 			if !p.Enabled {
 				status = "disabled"
 			}
-			cmd.Printf("  %-20s %-6s  %s\n", p.Name, status, p.Path)
+			ruleCount := len(p.Rules)
+			cmd.Printf("  %-20s %-6s  %d rule(s)\n", p.Name, status, ruleCount)
 		}
 		return nil
 	},
@@ -354,5 +410,7 @@ func init() {
 
 	rootCmd.AddCommand(pluginsCmd)
 	pluginsCmd.AddCommand(pluginsInstallCmd)
+	pluginsCmd.AddCommand(pluginsUninstallCmd)
 	pluginsCmd.AddCommand(pluginsListCmd)
+	pluginsInstallCmd.Flags().Bool("disabled", false, "Install the plugin with rules disabled")
 }

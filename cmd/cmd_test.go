@@ -83,6 +83,7 @@ func TestRuleSubcommandsAdded(t *testing.T) {
 func TestPluginsSubcommandsAdded(t *testing.T) {
 	expected := []string{
 		"install",
+		"uninstall",
 		"list",
 	}
 	for _, name := range expected {
@@ -308,11 +309,15 @@ policies:
   blockBinaries: []
 plugins:
   - name: my-plugin
-    path: /tmp/my-plugin.so
     enabled: true
+    rules:
+      - name: r1
+        type: file-block
+        pattern: "*.zip"
+        message: no zips
   - name: disabled-plugin
-    path: /tmp/disabled.so
     enabled: false
+    rules: []
 `
 	_ = os.WriteFile(configPath, []byte(yamlContent), 0644)
 
@@ -334,7 +339,7 @@ func TestPluginsInstall_FromDescriptor(t *testing.T) {
 	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\n  commit-msg:\n    enabled: true\n  pre-push:\n    enabled: true\n  post-merge:\n    enabled: false\npolicies:\n  blockFiles: []\n  maxFileSize: 10MB\n  secretScan: true\n  protectedBranches: []\n  conventionalCommits: true\n  blockBinaries: []\n"), 0644)
 
 	pluginDesc := filepath.Join(dir, "plugin.yaml")
-	_ = os.WriteFile(pluginDesc, []byte("name: test-plugin\npath: /tmp/test.so\nenabled: true\n"), 0644)
+	_ = os.WriteFile(pluginDesc, []byte("name: test-plugin\nrules:\n  - name: r1\n    type: file-block\n    pattern: \"*.zip\"\n    message: no zips\n"), 0644)
 
 	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "install", pluginDesc)
 	if err != nil {
@@ -353,8 +358,8 @@ func TestPluginsInstall_FromDescriptor(t *testing.T) {
 	for _, p := range cfg.Plugins {
 		if p.Name == "test-plugin" {
 			found = true
-			if p.Path != "/tmp/test.so" {
-				t.Errorf("expected path '/tmp/test.so', got %q", p.Path)
+			if len(p.Rules) != 1 || p.Rules[0].Name != "r1" {
+				t.Errorf("expected rule 'r1', got %+v", p.Rules)
 			}
 			if !p.Enabled {
 				t.Error("expected plugin to be enabled")
@@ -364,6 +369,85 @@ func TestPluginsInstall_FromDescriptor(t *testing.T) {
 	}
 	if !found {
 		t.Error("expected test-plugin to be in config")
+	}
+}
+
+func TestPluginsInstall_DisabledFlag(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\n"), 0644)
+
+	pluginDesc := filepath.Join(dir, "plugin.yaml")
+	_ = os.WriteFile(pluginDesc, []byte("name: test-plugin\nrules:\n  - name: r1\n    type: file-block\n    pattern: \"*.zip\"\n    message: no zips\n"), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "install", "--disabled", pluginDesc)
+	if err != nil {
+		t.Fatalf("plugins install --disabled failed: %v", err)
+	}
+	if !strings.Contains(output, "disabled") {
+		t.Errorf("expected output to contain 'disabled', got: %s", output)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		t.Fatalf("loading config after install: %v", err)
+	}
+	var found *config.PluginEntry
+	for _, p := range cfg.Plugins {
+		if p.Name == "test-plugin" {
+			found = &p
+			break
+		}
+	}
+	if found == nil {
+		t.Fatal("expected test-plugin to be in config")
+	}
+	if found.Enabled {
+		t.Error("expected plugin to be disabled when --disabled flag used")
+	}
+}
+
+func TestPluginsUninstall_Success(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\nplugins:\n  - name: my-plugin\n    enabled: true\n    rules:\n      - name: r1\n        type: file-block\n        pattern: \"*.zip\"\n        message: no\n  - name: other-plugin\n    enabled: true\n    rules: []\n"), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "uninstall", "my-plugin")
+	if err != nil {
+		t.Fatalf("plugins uninstall failed: %v", err)
+	}
+	if !strings.Contains(output, "my-plugin") {
+		t.Errorf("expected output to contain 'my-plugin', got: %s", output)
+	}
+	if !strings.Contains(output, "uninstalled") {
+		t.Errorf("expected output to contain 'uninstalled', got: %s", output)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		t.Fatalf("loading config after uninstall: %v", err)
+	}
+	for _, p := range cfg.Plugins {
+		if p.Name == "my-plugin" {
+			t.Error("expected my-plugin to be removed from config")
+		}
+	}
+	if len(cfg.Plugins) != 1 {
+		t.Errorf("expected 1 plugin remaining, got %d", len(cfg.Plugins))
+	}
+}
+
+func TestPluginsUninstall_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\n"), 0644)
+
+	_, err := executeCommand(rootCmd, "--config", configPath, "plugins", "uninstall", "nonexistent")
+	if err == nil {
+		t.Fatal("expected error for nonexistent plugin")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found', got: %v", err)
 	}
 }
 
