@@ -3,6 +3,7 @@ package plugins
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/marcuwynu23/git-policy/internal/policy"
@@ -26,14 +27,18 @@ func (l *Loader) PoliciesFromRules(rules []config.CustomRuleDef) []policy.Policy
 }
 
 // PoliciesFromPlugins creates Policy instances from all enabled plugin entries.
-// Each entry's Path is loaded as a plugin descriptor YAML file.
-func (l *Loader) PoliciesFromPlugins(entries []config.PluginEntry) ([]policy.Policy, error) {
+// configDir is used to resolve relative plugin paths. Empty means CWD.
+func (l *Loader) PoliciesFromPlugins(entries []config.PluginEntry, configDir string) ([]policy.Policy, error) {
 	var all []policy.Policy
 	for _, entry := range entries {
 		if !entry.Enabled {
 			continue
 		}
-		desc, err := config.LoadPluginDescriptor(entry.Path)
+		pluginPath := entry.Path
+		if !filepath.IsAbs(pluginPath) && configDir != "" {
+			pluginPath = filepath.Join(configDir, pluginPath)
+		}
+		desc, err := config.LoadPluginDescriptor(pluginPath)
 		if err != nil {
 			return nil, fmt.Errorf("plugin %q: %w", entry.Name, err)
 		}
