@@ -171,6 +171,11 @@ type PluginDescriptor struct {
 
 // ConfigDir returns the directory containing the config file.
 func ConfigDir(configPath string) string {
+	if configPath == "" {
+		if defaultPath, err := DefaultConfigPath(); err == nil {
+			return filepath.Dir(defaultPath)
+		}
+	}
 	return filepath.Dir(configPath)
 }
 
@@ -182,6 +187,11 @@ func PluginsDir(configPath string) string {
 // RulesDir returns the rules directory within the config directory.
 func RulesDir(configPath string) string {
 	return filepath.Join(ConfigDir(configPath), "rules")
+}
+
+// HistoryDir returns the history directory within the config directory.
+func HistoryDir(configPath string) string {
+	return filepath.Join(ConfigDir(configPath), "history")
 }
 
 // LoadPluginDescriptor reads a plugin descriptor from a YAML file.
@@ -215,11 +225,6 @@ func LoadPluginDescriptor(path string) (*PluginDescriptor, error) {
 		}
 	}
 	return &desc, nil
-}
-
-// HistoryDir returns the history directory within the config directory.
-func HistoryDir(configPath string) string {
-	return filepath.Join(ConfigDir(configPath), "history")
 }
 
 // DefaultConfig returns a configuration with sensible default values.
