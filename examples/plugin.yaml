@@ -1,0 +1,3 @@
+name: secret-scanner-pro
+path: /home/user/plugins/secret-scanner-pro.so
+enabled: true

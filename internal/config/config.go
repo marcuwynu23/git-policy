@@ -10,11 +10,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// PluginEntry represents a single plugin in the configuration.
+type PluginEntry struct {
+	Name    string `yaml:"name"`
+	Path    string `yaml:"path"`
+	Enabled bool   `yaml:"enabled"`
+}
+
 // Config represents the complete git-policy configuration.
 type Config struct {
-	Version  int           `yaml:"version"`
-	Hooks    HooksConfig   `yaml:"hooks"`
-	Policies PoliciesConfig `yaml:"policies"`
+	Version  int             `yaml:"version"`
+	Hooks    HooksConfig     `yaml:"hooks"`
+	Policies PoliciesConfig  `yaml:"policies"`
+	Plugins  []PluginEntry   `yaml:"plugins,omitempty"`
 }
 
 // HooksConfig controls which Git hooks are enabled.
@@ -90,6 +98,54 @@ func (p *PoliciesConfig) SetDisabled(name string, disabled bool) {
 		}
 		p.DisabledPolicies = updated
 	}
+}
+
+// AddPlugin appends a plugin entry or updates an existing one by name.
+func (c *Config) AddPlugin(entry PluginEntry) {
+	for i, p := range c.Plugins {
+		if p.Name == entry.Name {
+			c.Plugins[i] = entry
+			return
+		}
+	}
+	c.Plugins = append(c.Plugins, entry)
+}
+
+// RemovePlugin removes a plugin entry by name.
+func (c *Config) RemovePlugin(name string) bool {
+	for i, p := range c.Plugins {
+		if p.Name == name {
+			c.Plugins = append(c.Plugins[:i], c.Plugins[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
+// PluginDescriptor is the YAML structure for a standalone plugin file.
+type PluginDescriptor struct {
+	Name    string `yaml:"name"`
+	Path    string `yaml:"path"`
+	Enabled bool   `yaml:"enabled"`
+}
+
+// LoadPluginDescriptor reads a plugin descriptor from a YAML file.
+func LoadPluginDescriptor(path string) (*PluginDescriptor, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading plugin descriptor %q: %w", path, err)
+	}
+	var desc PluginDescriptor
+	if err := yaml.Unmarshal(data, &desc); err != nil {
+		return nil, fmt.Errorf("parsing plugin descriptor %q: %w", path, err)
+	}
+	if desc.Name == "" {
+		return nil, fmt.Errorf("plugin descriptor %q: name is required", path)
+	}
+	if desc.Path == "" {
+		return nil, fmt.Errorf("plugin descriptor %q: path is required", path)
+	}
+	return &desc, nil
 }
 
 // DefaultConfig returns a configuration with sensible default values.

@@ -33,3 +33,8 @@ policies:
   requiredFiles:
     - README.md
     - LICENSE
+
+plugins:
+  - name: secret-scanner-pro
+    path: /path/to/secret-scanner-pro.so
+    enabled: true
