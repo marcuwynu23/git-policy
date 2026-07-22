@@ -10,6 +10,7 @@ import (
 	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/marcuwynu23/git-policy/internal/git"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var policyCmd = &cobra.Command{
@@ -77,6 +78,7 @@ func availablePolicyNames() string {
 		names = append(names, cli)
 	}
 	sort.Strings(names)
+	names = append(names, "custom:<name>")
 	return strings.Join(names, ", ")
 }
 
@@ -116,36 +118,224 @@ func setPolicyEnabled(cliName string, disabled bool) error {
 
 var policyAddCmd = &cobra.Command{
 	Use:   "add [name]",
-	Short: "Add a custom rule (not yet implemented)",
-	Args:  cobra.ExactArgs(1),
+	Short: "Add a custom rule to the config",
+	Long: `Add a custom rule directly to the configuration file.
+
+The rule is stored in config.yaml under the customRules section and
+runs alongside built-in rules on every commit.
+
+Supported rule types:
+  file-block      Block files matching a glob pattern
+  file-content    Scan file contents for a string pattern
+  branch-name     Block commits to branches matching a pattern
+  commit-message  Block commits with messages matching a pattern
+
+Example:
+  git-policy rule add no-todo --type file-content --pattern "TODO:" --message "No todos" --fix "Resolve TODO"`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("rule add not yet implemented")
+		ruleType, _ := cmd.Flags().GetString("type")
+		pattern, _ := cmd.Flags().GetString("pattern")
+		message, _ := cmd.Flags().GetString("message")
+		fix, _ := cmd.Flags().GetString("fix")
+
+		if ruleType == "" {
+			return fmt.Errorf("--type is required (file-block, file-content, branch-name, commit-message)")
+		}
+		if pattern == "" {
+			return fmt.Errorf("--pattern is required")
+		}
+		if message == "" {
+			return fmt.Errorf("--message is required")
+		}
+
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		cfg.AddCustomRule(config.CustomRuleDef{
+			Name:    args[0],
+			Type:    ruleType,
+			Pattern: pattern,
+			Message: message,
+			Fix:     fix,
+		})
+
+		if err := config.Save(cfg, path); err != nil {
+			return fmt.Errorf("saving config: %w", err)
+		}
+
+		cmd.Printf("Custom rule %q added (%s).\n", args[0], ruleType)
+		return nil
 	},
 }
 
 var policyRemoveCmd = &cobra.Command{
 	Use:   "remove [name]",
-	Short: "Remove a rule (not yet implemented)",
-	Args:  cobra.ExactArgs(1),
+	Short: "Remove a custom rule from the config",
+	Long: `Remove a custom rule from the configuration file.
+
+Example:
+  git-policy rule remove no-todo`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("rule remove not yet implemented")
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		if !cfg.RemoveCustomRule(args[0]) {
+			return fmt.Errorf("custom rule %q not found", args[0])
+		}
+
+		if err := config.Save(cfg, path); err != nil {
+			return fmt.Errorf("saving config: %w", err)
+		}
+
+		cmd.Printf("Custom rule %q removed.\n", args[0])
+		return nil
 	},
 }
 
 var policyExportCmd = &cobra.Command{
-	Use:   "export",
-	Short: "Export rules to a file (not yet implemented)",
+	Use:   "export [name]",
+	Short: "Export a custom rule to a YAML file",
+	Long: `Export a custom rule as a standalone YAML file.
+
+The exported file can be shared or re-imported on another machine.
+
+Example:
+  git-policy rule export no-todo -o ./my-rule.yaml`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("rule export not yet implemented")
+		output, _ := cmd.Flags().GetString("output")
+
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		var rule *config.CustomRuleDef
+		for _, r := range cfg.CustomRules {
+			if r.Name == args[0] {
+				rule = &r
+				break
+			}
+		}
+		if rule == nil {
+			return fmt.Errorf("custom rule %q not found", args[0])
+		}
+
+		if output == "" {
+			output = filepath.Join(config.RulesDir(path), args[0]+".yaml")
+			if err := os.MkdirAll(config.RulesDir(path), 0755); err != nil {
+				return fmt.Errorf("creating rules directory: %w", err)
+			}
+		}
+
+		data, err := yaml.Marshal(rule)
+		if err != nil {
+			return fmt.Errorf("marshaling rule: %w", err)
+		}
+
+		if err := os.WriteFile(output, data, 0644); err != nil {
+			return fmt.Errorf("writing rule file: %w", err)
+		}
+
+		cmd.Printf("Rule %q exported to %s.\n", args[0], output)
+		return nil
 	},
 }
 
 var policyImportCmd = &cobra.Command{
 	Use:   "import [file]",
-	Short: "Import rules from a file (not yet implemented)",
-	Args:  cobra.ExactArgs(1),
+	Short: "Import a custom rule from a YAML file",
+	Long: `Import a custom rule from a YAML file into the configuration.
+
+The file should contain a single rule definition:
+
+  name: no-todo
+  type: file-content
+  pattern: "TODO:"
+  message: "No todos"
+  fix: "Resolve TODO"
+
+Example:
+  git-policy rule import ./my-rule.yaml`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("rule import not yet implemented")
+		data, err := os.ReadFile(args[0])
+		if err != nil {
+			return fmt.Errorf("reading rule file: %w", err)
+		}
+
+		var rule config.CustomRuleDef
+		if err := yaml.Unmarshal(data, &rule); err != nil {
+			return fmt.Errorf("parsing rule file: %w", err)
+		}
+		if rule.Name == "" {
+			return fmt.Errorf("rule file %q: name is required", args[0])
+		}
+		if rule.Type == "" {
+			return fmt.Errorf("rule file %q: type is required", args[0])
+		}
+		if rule.Pattern == "" {
+			return fmt.Errorf("rule file %q: pattern is required", args[0])
+		}
+		if rule.Message == "" {
+			return fmt.Errorf("rule file %q: message is required", args[0])
+		}
+
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		cfg.AddCustomRule(rule)
+
+		if err := config.Save(cfg, path); err != nil {
+			return fmt.Errorf("saving config: %w", err)
+		}
+
+		cmd.Printf("Custom rule %q imported (%s).\n", rule.Name, rule.Type)
+		return nil
 	},
 }
 
@@ -343,7 +533,9 @@ func addSkippedRules(cmd *cobra.Command, cliNames []string) error {
 		return fmt.Errorf("not a git repository")
 	}
 	for _, name := range cliNames {
-		if _, ok := config.PolicyNames[name]; !ok {
+		_, isBuiltin := config.PolicyNames[name]
+		isCustom := strings.HasPrefix(name, "custom:")
+		if !isBuiltin && !isCustom {
 			return fmt.Errorf("unknown rule %q\n\nAvailable: %s", name, availablePolicyNames())
 		}
 	}
@@ -432,6 +624,13 @@ func init() {
 
 	policySkipCmd.Flags().Bool("list", false, "Show currently skipped rules")
 	policySkipCmd.Flags().Bool("clear", false, "Clear all skipped rules")
+
+	policyAddCmd.Flags().String("type", "", "Rule type (file-block, file-content, branch-name, commit-message)")
+	policyAddCmd.Flags().String("pattern", "", "Pattern to match (glob or text)")
+	policyAddCmd.Flags().String("message", "", "Error message when rule blocks")
+	policyAddCmd.Flags().String("fix", "", "Suggested fix (optional)")
+
+	policyExportCmd.Flags().StringP("output", "o", "", "Output file path (default: <config-dir>/rules/<name>.yaml)")
 
 	rootCmd.AddCommand(pluginsCmd)
 	pluginsCmd.AddCommand(pluginsInstallCmd)

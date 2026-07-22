@@ -471,23 +471,150 @@ func TestPluginsUninstall_NotFound(t *testing.T) {
 	}
 }
 
-func TestUnimplementedCommandsReturnError(t *testing.T) {
-	tests := []struct {
-		args []string
-		msg  string
-	}{
-		{[]string{"rule", "add", "myrule"}, "rule add not yet implemented"},
-		{[]string{"rule", "remove", "myrule"}, "rule remove not yet implemented"},
-		{[]string{"rule", "export"}, "rule export not yet implemented"},
-		{[]string{"rule", "import", "file.yaml"}, "rule import not yet implemented"},
+func TestRuleAdd_RequiresFlags(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\n"), 0644)
+
+	_, err := executeCommand(rootCmd, "--config", configPath, "rule", "add", "myrule")
+	if err == nil {
+		t.Fatal("expected error for missing --type flag")
 	}
-	for _, tt := range tests {
-		_, err := executeCommand(rootCmd, tt.args...)
-		if err == nil {
-			t.Errorf("expected error for %v, got nil", tt.args)
+}
+
+func TestRuleAdd_Success(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\n"), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath,
+		"rule", "add", "no-zips", "--type", "file-block", "--pattern", "*.zip", "--message", "No zips", "--fix", "Remove zips")
+	if err != nil {
+		t.Fatalf("rule add failed: %v", err)
+	}
+	if !strings.Contains(output, "no-zips") {
+		t.Errorf("expected output to contain 'no-zips', got: %s", output)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		t.Fatalf("loading config: %v", err)
+	}
+	found := false
+	for _, r := range cfg.CustomRules {
+		if r.Name == "no-zips" {
+			found = true
+			if r.Type != "file-block" {
+				t.Errorf("expected type 'file-block', got %q", r.Type)
+			}
+			if r.Pattern != "*.zip" {
+				t.Errorf("expected pattern '*.zip', got %q", r.Pattern)
+			}
+			if r.Message != "No zips" {
+				t.Errorf("expected message 'No zips', got %q", r.Message)
+			}
+			if r.Fix != "Remove zips" {
+				t.Errorf("expected fix 'Remove zips', got %q", r.Fix)
+			}
+			break
 		}
-		if !strings.Contains(err.Error(), tt.msg) {
-			t.Errorf("expected error %q to contain %q", err.Error(), tt.msg)
+	}
+	if !found {
+		t.Error("expected no-zips to be in custom rules")
+	}
+}
+
+func TestRuleRemove_Success(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	yamlContent := "version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\ncustomRules:\n  - name: my-rule\n    type: file-block\n    pattern: \"*.zip\"\n    message: no\n"
+	_ = os.WriteFile(configPath, []byte(yamlContent), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "rule", "remove", "my-rule")
+	if err != nil {
+		t.Fatalf("rule remove failed: %v", err)
+	}
+	if !strings.Contains(output, "my-rule") || !strings.Contains(output, "removed") {
+		t.Errorf("unexpected output: %s", output)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		t.Fatalf("loading config: %v", err)
+	}
+	for _, r := range cfg.CustomRules {
+		if r.Name == "my-rule" {
+			t.Error("expected my-rule to be removed")
 		}
+	}
+}
+
+func TestRuleRemove_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\n"), 0644)
+
+	_, err := executeCommand(rootCmd, "--config", configPath, "rule", "remove", "nonexistent")
+	if err == nil {
+		t.Fatal("expected error for nonexistent rule")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected 'not found', got: %v", err)
+	}
+}
+
+func TestRuleExport_Success(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	yamlContent := "version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\ncustomRules:\n  - name: my-rule\n    type: file-block\n    pattern: \"*.zip\"\n    message: no\n"
+	_ = os.WriteFile(configPath, []byte(yamlContent), 0644)
+
+	outFile := filepath.Join(dir, "exported.yaml")
+	output, err := executeCommand(rootCmd, "--config", configPath, "rule", "export", "my-rule", "--output", outFile)
+	if err != nil {
+		t.Fatalf("rule export failed: %v", err)
+	}
+	if !strings.Contains(output, "my-rule") {
+		t.Errorf("expected output to contain 'my-rule', got: %s", output)
+	}
+
+	data, err := os.ReadFile(outFile)
+	if err != nil {
+		t.Fatalf("reading exported file: %v", err)
+	}
+	if !strings.Contains(string(data), "my-rule") {
+		t.Errorf("exported file missing rule name: %s", string(data))
+	}
+}
+
+func TestRuleImport_Success(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\n"), 0644)
+
+	ruleFile := filepath.Join(dir, "rule.yaml")
+	_ = os.WriteFile(ruleFile, []byte("name: imported-rule\ntype: file-content\npattern: \"TODO:\"\nmessage: No todos\nfix: Remove TODO\n"), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "rule", "import", ruleFile)
+	if err != nil {
+		t.Fatalf("rule import failed: %v", err)
+	}
+	if !strings.Contains(output, "imported-rule") {
+		t.Errorf("expected output to contain 'imported-rule', got: %s", output)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		t.Fatalf("loading config: %v", err)
+	}
+	found := false
+	for _, r := range cfg.CustomRules {
+		if r.Name == "imported-rule" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected imported-rule to be in config")
 	}
 }
