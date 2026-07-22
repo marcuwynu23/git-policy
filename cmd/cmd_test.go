@@ -345,7 +345,7 @@ func TestPluginsInstall_FromDescriptor(t *testing.T) {
 		t.Errorf("expected output to contain 'test-plugin', got: %s", output)
 	}
 
-	// Verify it was saved to config
+	// Verify it was saved to config and file was copied to plugins dir
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		t.Fatalf("loading config after install: %v", err)
@@ -354,9 +354,12 @@ func TestPluginsInstall_FromDescriptor(t *testing.T) {
 	for _, p := range cfg.Plugins {
 		if p.Name == "test-plugin" {
 			found = true
-			absDesc, _ := filepath.Abs(pluginDesc)
-			if p.Path != absDesc {
-				t.Errorf("expected path %q, got %q", absDesc, p.Path)
+			expectedPath := filepath.Join(config.PluginsDir(configPath), "test-plugin.yaml")
+			if p.Path != expectedPath {
+				t.Errorf("expected path %q, got %q", expectedPath, p.Path)
+			}
+			if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
+				t.Errorf("plugin file was not copied to %s", expectedPath)
 			}
 			if !p.Enabled {
 				t.Error("expected plugin to be enabled")
@@ -402,16 +405,28 @@ func TestPluginsInstall_DisabledFlag(t *testing.T) {
 	if found.Enabled {
 		t.Error("expected plugin to be disabled when --disabled flag used")
 	}
-	absDesc, _ := filepath.Abs(pluginDesc)
-	if found.Path != absDesc {
-		t.Errorf("expected path %q, got %q", absDesc, found.Path)
+	expectedPath := filepath.Join(config.PluginsDir(configPath), "test-plugin.yaml")
+	if found.Path != expectedPath {
+		t.Errorf("expected path %q, got %q", expectedPath, found.Path)
+	}
+	if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
+		t.Errorf("plugin file was not copied to %s", expectedPath)
 	}
 }
 
 func TestPluginsUninstall_Success(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
-	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\nplugins:\n  - name: my-plugin\n    path: /tmp/my-plugin.yaml\n    enabled: true\n  - name: other-plugin\n    path: /tmp/other.yaml\n    enabled: true\n"), 0644)
+	pluginsDir := filepath.Join(dir, "plugins")
+	_ = os.MkdirAll(pluginsDir, 0755)
+
+	myPluginFile := filepath.Join(pluginsDir, "my-plugin.yaml")
+	otherPluginFile := filepath.Join(pluginsDir, "other-plugin.yaml")
+	_ = os.WriteFile(myPluginFile, []byte("name: my-plugin\nrules:\n  - name: r1\n    type: file-block\n    pattern: \"*.zip\"\n    message: no\n"), 0644)
+	_ = os.WriteFile(otherPluginFile, []byte("name: other-plugin\nrules: []\n"), 0644)
+
+	yamlContent := "version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\nplugins:\n  - name: my-plugin\n    path: " + myPluginFile + "\n    enabled: true\n  - name: other-plugin\n    path: " + otherPluginFile + "\n    enabled: true\n"
+	_ = os.WriteFile(configPath, []byte(yamlContent), 0644)
 
 	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "uninstall", "my-plugin")
 	if err != nil {
@@ -435,6 +450,10 @@ func TestPluginsUninstall_Success(t *testing.T) {
 	}
 	if len(cfg.Plugins) != 1 {
 		t.Errorf("expected 1 plugin remaining, got %d", len(cfg.Plugins))
+	}
+
+	if _, err := os.Stat(myPluginFile); !os.IsNotExist(err) {
+		t.Errorf("expected plugin file %s to be deleted", myPluginFile)
 	}
 }
 

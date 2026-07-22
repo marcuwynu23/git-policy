@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -198,19 +199,29 @@ Example:
 			}
 		}
 
+		pluginsDir := config.PluginsDir(path)
+		if err := os.MkdirAll(pluginsDir, 0755); err != nil {
+			return fmt.Errorf("creating plugins directory: %w", err)
+		}
+
+		dstName := desc.Name + ".yaml"
+		dstPath := filepath.Join(pluginsDir, dstName)
+		srcData, err := os.ReadFile(args[0])
+		if err != nil {
+			return fmt.Errorf("reading plugin descriptor: %w", err)
+		}
+		if err := os.WriteFile(dstPath, srcData, 0644); err != nil {
+			return fmt.Errorf("copying plugin to %s: %w", dstPath, err)
+		}
+
 		cfg, err := config.Load(path)
 		if err != nil {
 			return fmt.Errorf("loading config: %w", err)
 		}
 
-		pluginPath, err := filepath.Abs(args[0])
-		if err != nil {
-			return fmt.Errorf("resolving plugin path: %w", err)
-		}
-
 		cfg.AddPlugin(config.PluginEntry{
 			Name:    desc.Name,
-			Path:    pluginPath,
+			Path:    dstPath,
 			Enabled: !disabled,
 		})
 
@@ -222,7 +233,7 @@ Example:
 		if disabled {
 			status = "disabled"
 		}
-		cmd.Printf("Plugin %q installed (%d rules, %s).\n  Path: %s\n", desc.Name, len(desc.Rules), status, pluginPath)
+		cmd.Printf("Plugin %q installed (%d rules, %s).\n  File: %s\n", desc.Name, len(desc.Rules), status, dstPath)
 		return nil
 	},
 }
@@ -230,7 +241,7 @@ Example:
 var pluginsUninstallCmd = &cobra.Command{
 	Use:   "uninstall [name]",
 	Short: "Uninstall a plugin by name",
-	Long: `Remove a plugin and all its rules from the configuration.
+	Long: `Remove a plugin and its descriptor file from the configuration.
 
 Example:
   git-policy plugins uninstall my-custom-rules`,
@@ -250,12 +261,21 @@ Example:
 			return fmt.Errorf("loading config: %w", err)
 		}
 
-		if !cfg.RemovePlugin(args[0]) {
+		entry := cfg.RemovePlugin(args[0])
+		if !entry {
 			return fmt.Errorf("plugin %q not found", args[0])
 		}
 
 		if err := config.Save(cfg, path); err != nil {
 			return fmt.Errorf("saving config: %w", err)
+		}
+
+		// Remove the descriptor file from the plugins directory
+		pluginFile := filepath.Join(config.PluginsDir(path), args[0]+".yaml")
+		if rmErr := os.Remove(pluginFile); rmErr != nil && !os.IsNotExist(rmErr) {
+			cmd.Printf("Warning: could not remove plugin file %s: %v\n", pluginFile, rmErr)
+		} else {
+			cmd.Printf("  Removed: %s\n", pluginFile)
 		}
 
 		cmd.Printf("Plugin %q uninstalled.\n", args[0])
