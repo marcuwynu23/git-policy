@@ -24,13 +24,15 @@
 - [x] `rule skip [name...]` — temporarily skip rules for current commit
 - [x] `rule skip --list` — show currently skipped rules
 - [x] `rule skip --clear` — clear all skipped rules
+- [x] `rule add <name>` — add a custom rule directly to config (--type, --pattern, --message, --fix)
+- [x] `rule remove <name>` — remove a custom rule from config
+- [x] `rule export <name>` — export a custom rule as a YAML file
+- [x] `rule import <file>` — import a custom rule from a YAML file
 - [x] `plugins install <file>` — install a plugin from YAML descriptor
 - [x] `plugins install --disabled <file>` — install with rules disabled by default
 - [x] `plugins uninstall <name>` — remove a plugin and its descriptor file from disk
 - [x] `plugins list` — list installed plugins with file paths
 - [ ] `sync` — sync policies from remote source (Git, HTTP, S3, GCS)
-- [ ] `rule add` / `rule remove` — custom rule management (use plugins instead)
-- [ ] `rule export` / `rule import` — rule sharing
 
 ### Plugin System (YAML-Driven Custom Rules)
 

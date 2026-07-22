@@ -180,6 +180,10 @@ For detailed usage, see [USER-GUIDE.md](USER-GUIDE.md).
 | `rule skip [name...]`              | Skip a rule for the current commit (auto-clears)   |
 | `rule skip --list`                 | Show currently skipped rules                       |
 | `rule skip --clear`                | Clear all skipped rules                            |
+| `rule add <name>`                  | Add a custom rule (--type, --pattern, --message)   |
+| `rule remove <name>`               | Remove a custom rule from config                   |
+| `rule export <name>`               | Export a custom rule as a YAML file                |
+| `rule import <file>`               | Import a custom rule from a YAML file              |
 | `plugins install <file>`           | Install a plugin from a YAML descriptor            |
 | `plugins install --disabled <file>`| Install with rules disabled by default             |
 | `plugins uninstall <name>`         | Remove a plugin and its descriptor file from disk  |

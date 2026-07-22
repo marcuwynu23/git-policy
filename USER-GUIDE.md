@@ -190,6 +190,25 @@ plugins:
 The path is stored as an absolute path and is managed by the `plugins` subcommands —
 you rarely edit this section manually.
 
+### Custom Rules in Config
+
+Rules defined via `rule add` are stored directly in `config.yaml`:
+
+```yaml
+customRules:
+  - name: no-todo
+    type: file-content
+    pattern: "TODO:"
+    message: "Commits containing TODO are not allowed"
+    fix: "Resolve the TODO before committing"
+  - name: no-zip-files
+    type: file-block
+    pattern: "*.zip"
+    message: "Zip files are not allowed"
+```
+
+This section is managed by the `rule add`, `rule remove`, `rule import`, and `rule export` commands.
+
 ---
 
 ## Commands at a Glance
@@ -208,6 +227,10 @@ you rarely edit this section manually.
 | `git-policy rule skip [name...]`          | Skip rules for the current commit           |
 | `git-policy rule skip --list`             | Show currently skipped rules                |
 | `git-policy rule skip --clear`            | Clear all skipped rules                     |
+| `git-policy rule add <name>`              | Add a custom rule (--type, --pattern, --message, --fix) |
+| `git-policy rule remove <name>`           | Remove a custom rule from config            |
+| `git-policy rule export <name>`           | Export a custom rule as a YAML file         |
+| `git-policy rule import <file>`           | Import a custom rule from a YAML file       |
 | `git-policy plugins install <file>`       | Install a plugin from a YAML descriptor     |
 | `git-policy plugins install --disabled`   | Install with rules disabled by default      |
 | `git-policy plugins uninstall <name>`     | Remove a plugin and its descriptor file     |
@@ -271,6 +294,52 @@ git-policy run
 ```
 
 This is what the hooks execute. Useful for testing without committing.
+
+### Custom Rules (rule add / remove)
+
+Add a rule directly to `config.yaml` without creating a plugin file:
+
+```bash
+git-policy rule add no-todo \
+  --type file-content \
+  --pattern "TODO:" \
+  --message "Commits containing TODO are not allowed" \
+  --fix "Resolve the TODO before committing"
+```
+
+Remove a rule:
+
+```bash
+git-policy rule remove no-todo
+```
+
+List all custom rules by viewing the config or the full rule list:
+
+```bash
+git-policy validate
+```
+
+Custom rules are stored in `config.yaml` under `customRules:` and run alongside
+built-in rules on every commit. They can be skipped with `custom:<name>`:
+
+```bash
+git-policy rule skip custom:no-todo
+```
+
+### Export / Import Rules
+
+Share a custom rule as a standalone YAML file:
+
+```bash
+# Export a rule
+git-policy rule export no-todo -o ./my-rule.yaml
+
+# Import on another machine
+git-policy rule import ./my-rule.yaml
+```
+
+The exported file is a single rule definition that can be version-controlled
+and shared with your team.
 
 ---
 
