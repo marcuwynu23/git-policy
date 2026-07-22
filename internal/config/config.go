@@ -29,10 +29,11 @@ type PluginEntry struct {
 
 // Config represents the complete git-policy configuration.
 type Config struct {
-	Version  int             `yaml:"version"`
-	Hooks    HooksConfig     `yaml:"hooks"`
-	Policies PoliciesConfig  `yaml:"policies"`
-	Plugins  []PluginEntry   `yaml:"plugins,omitempty"`
+	Version     int             `yaml:"version"`
+	Hooks       HooksConfig     `yaml:"hooks"`
+	Policies    PoliciesConfig  `yaml:"policies"`
+	CustomRules []CustomRuleDef `yaml:"customRules,omitempty"`
+	Plugins     []PluginEntry   `yaml:"plugins,omitempty"`
 }
 
 // HooksConfig controls which Git hooks are enabled.
@@ -132,6 +133,29 @@ func (c *Config) RemovePlugin(name string) bool {
 	return false
 }
 
+// AddCustomRule appends a custom rule or updates an existing one by name.
+func (c *Config) AddCustomRule(def CustomRuleDef) bool {
+	for i, r := range c.CustomRules {
+		if r.Name == def.Name {
+			c.CustomRules[i] = def
+			return true
+		}
+	}
+	c.CustomRules = append(c.CustomRules, def)
+	return true
+}
+
+// RemoveCustomRule removes a custom rule by name.
+func (c *Config) RemoveCustomRule(name string) bool {
+	for i, r := range c.CustomRules {
+		if r.Name == name {
+			c.CustomRules = append(c.CustomRules[:i], c.CustomRules[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
 // PluginDescriptor is the YAML structure for a standalone plugin file.
 type PluginDescriptor struct {
 	Name  string          `yaml:"name"`
@@ -146,6 +170,11 @@ func ConfigDir(configPath string) string {
 // PluginsDir returns the plugins directory within the config directory.
 func PluginsDir(configPath string) string {
 	return filepath.Join(ConfigDir(configPath), "plugins")
+}
+
+// RulesDir returns the rules directory within the config directory.
+func RulesDir(configPath string) string {
+	return filepath.Join(ConfigDir(configPath), "rules")
 }
 
 // LoadPluginDescriptor reads a plugin descriptor from a YAML file.
