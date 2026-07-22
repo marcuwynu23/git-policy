@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -202,10 +203,15 @@ Example:
 			return fmt.Errorf("loading config: %w", err)
 		}
 
+		pluginPath, err := filepath.Abs(args[0])
+		if err != nil {
+			return fmt.Errorf("resolving plugin path: %w", err)
+		}
+
 		cfg.AddPlugin(config.PluginEntry{
 			Name:    desc.Name,
+			Path:    pluginPath,
 			Enabled: !disabled,
-			Rules:   desc.Rules,
 		})
 
 		if err := config.Save(cfg, path); err != nil {
@@ -216,7 +222,7 @@ Example:
 		if disabled {
 			status = "disabled"
 		}
-		cmd.Printf("Plugin %q installed (%d rules, %s).\n", desc.Name, len(desc.Rules), status)
+		cmd.Printf("Plugin %q installed (%d rules, %s).\n  Path: %s\n", desc.Name, len(desc.Rules), status, pluginPath)
 		return nil
 	},
 }
@@ -387,8 +393,7 @@ var pluginsListCmd = &cobra.Command{
 			if !p.Enabled {
 				status = "disabled"
 			}
-			ruleCount := len(p.Rules)
-			cmd.Printf("  %-20s %-6s  %d rule(s)\n", p.Name, status, ruleCount)
+			cmd.Printf("  %-20s %-6s  %s\n", p.Name, status, p.Path)
 		}
 		return nil
 	},

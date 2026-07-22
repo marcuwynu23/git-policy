@@ -309,15 +309,11 @@ policies:
   blockBinaries: []
 plugins:
   - name: my-plugin
+    path: /tmp/my-plugin.yaml
     enabled: true
-    rules:
-      - name: r1
-        type: file-block
-        pattern: "*.zip"
-        message: no zips
   - name: disabled-plugin
+    path: /tmp/disabled.yaml
     enabled: false
-    rules: []
 `
 	_ = os.WriteFile(configPath, []byte(yamlContent), 0644)
 
@@ -358,8 +354,9 @@ func TestPluginsInstall_FromDescriptor(t *testing.T) {
 	for _, p := range cfg.Plugins {
 		if p.Name == "test-plugin" {
 			found = true
-			if len(p.Rules) != 1 || p.Rules[0].Name != "r1" {
-				t.Errorf("expected rule 'r1', got %+v", p.Rules)
+			absDesc, _ := filepath.Abs(pluginDesc)
+			if p.Path != absDesc {
+				t.Errorf("expected path %q, got %q", absDesc, p.Path)
 			}
 			if !p.Enabled {
 				t.Error("expected plugin to be enabled")
@@ -405,12 +402,16 @@ func TestPluginsInstall_DisabledFlag(t *testing.T) {
 	if found.Enabled {
 		t.Error("expected plugin to be disabled when --disabled flag used")
 	}
+	absDesc, _ := filepath.Abs(pluginDesc)
+	if found.Path != absDesc {
+		t.Errorf("expected path %q, got %q", absDesc, found.Path)
+	}
 }
 
 func TestPluginsUninstall_Success(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
-	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\nplugins:\n  - name: my-plugin\n    enabled: true\n    rules:\n      - name: r1\n        type: file-block\n        pattern: \"*.zip\"\n        message: no\n  - name: other-plugin\n    enabled: true\n    rules: []\n"), 0644)
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\npolicies:\n  blockFiles: []\n  conventionalCommits: true\nplugins:\n  - name: my-plugin\n    path: /tmp/my-plugin.yaml\n    enabled: true\n  - name: other-plugin\n    path: /tmp/other.yaml\n    enabled: true\n"), 0644)
 
 	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "uninstall", "my-plugin")
 	if err != nil {
