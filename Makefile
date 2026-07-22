@@ -1,4 +1,4 @@
-BIN_DIR=C:\Bin\tools
+BIN_DIR=dist
 .PHONY: all build clean test lint vet fmt run install uninstall doctor validate help install-binary dev link
 
 BINARY_NAME=git-policy
@@ -13,7 +13,8 @@ GO_FLAGS=-ldflags="-w -X github.com/marcuwynu23/git-policy/cmd.version=$(VERSION
 all: lint vet test build
 
 build:
-	$(GO_BUILD) $(GO_FLAGS) -o $(BINARY_NAME)$(BINARY_EXT) .
+	mkdir -p dist
+	$(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)$(BINARY_EXT) .
 
 clean:
 	rm -f $(BINARY_NAME)$(BINARY_EXT)
@@ -71,15 +72,21 @@ dist:
 	GOOS=linux GOARCH=arm64 $(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)-linux-arm64 .
 	GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)-darwin-amd64 .
 	GOOS=darwin GOARCH=arm64 $(GO_BUILD) $(GO_FLAGS) -o dist/$(BINARY_NAME)-darwin-arm64 .
-	cp -f $(BINARY_NAME)$(BINARY_EXT) dist/
 
 install-binary: build
-	cp -f $(BINARY_NAME)$(BINARY_EXT) $(BIN_DIR)/$(BINARY_NAME).exe
+	cp -f dist/$(BINARY_NAME)$(BINARY_EXT) $(BIN_DIR)/$(BINARY_NAME)$(BINARY_EXT)
 
 link: build
-	@if exist "$(BIN_DIR)\$(BINARY_NAME).exe" del /f "$(BIN_DIR)\$(BINARY_NAME).exe"
-	powershell -Command "New-Item -ItemType SymbolicLink -Path '$(BIN_DIR)' -Name '$(BINARY_NAME).exe' -Target '$(CURDIR)\$(BINARY_NAME)$(BINARY_EXT)'"
-	@echo "Symbolic link created: $(BIN_DIR)\$(BINARY_NAME).exe -> $(CURDIR)\$(BINARY_NAME)$(BINARY_EXT)"
+	@echo "Creating symbolic link..."
+	@# Check if we're on Windows or Unix-like
+	@if [ -n "$(ComSpec)" ]; then \
+		powershell -Command "if (Test-Path 'C:\Bin\tools\$(BINARY_NAME)$(BINARY_EXT)') { Remove-Item -Force 'C:\Bin\tools\$(BINARY_NAME)$(BINARY_EXT)' }"; \
+		powershell -Command "New-Item -ItemType SymbolicLink -Path 'C:\Bin\tools' -Name '$(BINARY_NAME)$(BINARY_EXT)' -Target '$(CURDIR)\dist\$(BINARY_NAME)$(BINARY_EXT)' -Force"; \
+		echo "Symbolic link created: C:\Bin\tools\$(BINARY_NAME)$(BINARY_EXT) -> $(CURDIR)\dist\$(BINARY_NAME)$(BINARY_EXT)"; \
+	else \
+		ln -sf $(CURDIR)/dist/$(BINARY_NAME)$(BINARY_EXT) /usr/local/bin/$(BINARY_NAME)$(BINARY_EXT); \
+		echo "Symbolic link created: /usr/local/bin/$(BINARY_NAME)$(BINARY_EXT) -> $(CURDIR)/dist/$(BINARY_NAME)$(BINARY_EXT)"; \
+	fi
 
 dev: build link install
 	@echo "git-policy built, linked to PATH, and hooks installed."
