@@ -1,5 +1,5 @@
 BIN_DIR=C:\Bin\tools
-.PHONY: all build clean test lint vet fmt run install uninstall doctor validate help install-binary dev
+.PHONY: all build clean test lint vet fmt run install uninstall doctor validate help install-binary dev link
 
 BINARY_NAME=git-policy
 BINARY_EXT=
@@ -76,14 +76,20 @@ dist:
 install-binary: build
 	cp -f $(BINARY_NAME)$(BINARY_EXT) $(BIN_DIR)/$(BINARY_NAME).exe
 
-dev: build install-binary install
+link: build
+	@if exist "$(BIN_DIR)\$(BINARY_NAME).exe" del /f "$(BIN_DIR)\$(BINARY_NAME).exe"
+	powershell -Command "New-Item -ItemType SymbolicLink -Path '$(BIN_DIR)' -Name '$(BINARY_NAME).exe' -Target '$(CURDIR)\$(BINARY_NAME)$(BINARY_EXT)'"
+	@echo "Symbolic link created: $(BIN_DIR)\$(BINARY_NAME).exe -> $(CURDIR)\$(BINARY_NAME)$(BINARY_EXT)"
+
+dev: build link install
 	@echo "git-policy built, linked to PATH, and hooks installed."
 
 help:
 	@echo "Usage:"
 	@echo "  make build         - Build the binary"
 	@echo "  make install-binary - Build + copy binary to $(BIN_DIR)"
-	@echo "  make dev           - Build + link + install hooks (full dev setup)"
+	@echo "  make link          - Build + create symlink in $(BIN_DIR) (live testing)"
+	@echo "  make dev           - Build + symlink + install hooks (full dev setup)"
 	@echo "  make test          - Run all tests"
 	@echo "  make test-cover    - Run tests with coverage"
 	@echo "  make lint          - Run linter"
