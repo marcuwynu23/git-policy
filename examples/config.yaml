@@ -35,6 +35,16 @@ policies:
     - LICENSE
 
 plugins:
-  - name: secret-scanner-pro
-    path: /path/to/secret-scanner-pro.so
+  - name: team-rules
     enabled: true
+    rules:
+      - name: no-todo
+        type: file-content
+        pattern: "TODO:"
+        message: "Commits containing TODO are not allowed"
+        fix: "Resolve the TODO before committing"
+      - name: no-draft-branches
+        type: branch-name
+        pattern: "draft-*"
+        message: "Commits to draft branches are blocked"
+        fix: "Switch to a non-draft branch"

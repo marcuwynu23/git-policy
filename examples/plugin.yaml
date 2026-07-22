@@ -1,3 +1,12 @@
-name: secret-scanner-pro
-path: /home/user/plugins/secret-scanner-pro.so
-enabled: true
+name: my-custom-rules
+rules:
+  - name: no-todo
+    type: file-content
+    pattern: "TODO:"
+    message: "Commits containing TODO are not allowed"
+    fix: "Resolve the TODO before committing"
+  - name: no-big-files
+    type: file-block
+    pattern: "*.zip"
+    message: "Zip files are not allowed"
+    fix: "Remove zip files from the commit"
