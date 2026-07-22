@@ -3,8 +3,6 @@ package history
 
 import (
 	"bufio"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -90,13 +88,17 @@ func Query(cfg *config.Config, configPath string, opts QueryOptions) ([]Record, 
 	}
 	targetRepo := opts.RepoPath
 	if targetRepo == "" {
-		var err error
-		targetRepo, err = getRepoPath()
-		if err != nil {
-			return nil, err
+		if git.IsRepo() {
+			var err error
+			targetRepo, err = getRepoPath()
+			if err != nil {
+				targetRepo = ""
+			}
+		} else {
+			targetRepo = ""
 		}
 	}
-	lines, err := readRecords(cfg, configPath, targetRepo)
+	lines, err := readRecords(cfg, configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +109,9 @@ func Query(cfg *config.Config, configPath string, opts QueryOptions) ([]Record, 
 			continue
 		}
 		if opts.Status != "" && rec.Overall != opts.Status {
+			continue
+		}
+		if targetRepo != "" && rec.Repo != targetRepo {
 			continue
 		}
 		records = append(records, rec)
@@ -124,14 +129,30 @@ func Query(cfg *config.Config, configPath string, opts QueryOptions) ([]Record, 
 // Clear clears history records
 func Clear(cfg *config.Config, configPath string, repoPath string) error {
 	if repoPath == "" {
-		var err error
-		repoPath, err = getRepoPath()
-		if err != nil {
-			return err
+		historyFile := getHistoryFilePath(configPath)
+		return os.Remove(historyFile)
+	}
+	// If repoPath is specified, we need to filter and rewrite without those records
+	historyFile := getHistoryFilePath(configPath)
+	lines, err := readAllRecords(historyFile)
+	if err != nil {
+		return err
+	}
+	var filteredLines [][]byte
+	for _, line := range lines {
+		var rec Record
+		if err := json.Unmarshal(line, &rec); err != nil {
+			continue
+		}
+		if rec.Repo != repoPath {
+			filteredLines = append(filteredLines, line)
 		}
 	}
-	historyFile := getHistoryFilePath(configPath, repoPath)
-	return os.Remove(historyFile)
+	var strLines []string
+	for _, l := range filteredLines {
+		strLines = append(strLines, string(l))
+	}
+	return os.WriteFile(historyFile, []byte(strings.Join(strLines, "\n")+"\n"), 0644)
 }
 
 func getRepoPath() (string, error) {
@@ -151,19 +172,13 @@ func getShortCommitHash() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func getHistoryFilePath(configPath string, repoPath string) string {
-	absRepoPath, err := filepath.Abs(repoPath)
-	if err != nil {
-		absRepoPath = repoPath
-	}
-	hash := sha256.Sum256([]byte(absRepoPath))
-	hashStr := hex.EncodeToString(hash[:])
+func getHistoryFilePath(configPath string) string {
 	historyDir := config.HistoryDir(configPath)
-	return filepath.Join(historyDir, hashStr+".jsonl")
+	return filepath.Join(historyDir, "history.jsonl")
 }
 
 func appendRecord(cfg *config.Config, configPath string, repoPath string, record Record) error {
-	historyFile := getHistoryFilePath(configPath, repoPath)
+	historyFile := getHistoryFilePath(configPath)
 	historyDir := filepath.Dir(historyFile)
 	if err := os.MkdirAll(historyDir, 0755); err != nil {
 		return err
@@ -187,8 +202,8 @@ func appendRecord(cfg *config.Config, configPath string, repoPath string, record
 	return os.WriteFile(historyFile, []byte(strings.Join(strLines, "\n")+"\n"), 0644)
 }
 
-func readRecords(cfg *config.Config, configPath string, repoPath string) ([][]byte, error) {
-	historyFile := getHistoryFilePath(configPath, repoPath)
+func readRecords(cfg *config.Config, configPath string) ([][]byte, error) {
+	historyFile := getHistoryFilePath(configPath)
 	return readAllRecords(historyFile)
 }
 
