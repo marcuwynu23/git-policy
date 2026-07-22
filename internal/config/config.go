@@ -138,6 +138,16 @@ type PluginDescriptor struct {
 	Rules []CustomRuleDef `yaml:"rules"`
 }
 
+// ConfigDir returns the directory containing the config file.
+func ConfigDir(configPath string) string {
+	return filepath.Dir(configPath)
+}
+
+// PluginsDir returns the plugins directory within the config directory.
+func PluginsDir(configPath string) string {
+	return filepath.Join(ConfigDir(configPath), "plugins")
+}
+
 // LoadPluginDescriptor reads a plugin descriptor from a YAML file.
 func LoadPluginDescriptor(path string) (*PluginDescriptor, error) {
 	data, err := os.ReadFile(path)
