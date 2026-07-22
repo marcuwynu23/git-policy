@@ -133,6 +133,10 @@ git-policy --config /path/to/config.yaml run
 ```yaml
 version: 1
 
+history:
+  enabled: true         # Enable git-policy run history
+  maxRecords: 1000      # Max number of history records to keep
+
 hooks:
   pre-commit:
     enabled: true       # Run on git commit
@@ -211,6 +215,38 @@ This section is managed by the `rule add`, `rule remove`, `rule import`, and `ru
 
 ---
 
+## History
+
+Track your git-policy runs across all repositories! History is stored in `~/.config/git-policy/history/history.jsonl`
+
+### View History
+
+```bash
+# Show recent history (default: last 20 records)
+git-policy history
+
+# Show last N records
+git-policy history --limit 10
+
+# Filter by repository
+git-policy history --repo /path/to/repo
+
+# Filter by status (pass or fail)
+git-policy history --status fail
+```
+
+### Clear History
+
+```bash
+# Clear all history
+git-policy history --clear
+
+# Clear history for a specific repository
+git-policy history --clear --repo /path/to/repo
+```
+
+---
+
 ## Commands at a Glance
 
 | Command                                   | Description                                 |
@@ -218,6 +254,7 @@ This section is managed by the `rule add`, `rule remove`, `rule import`, and `ru
 | `git-policy install`                      | Install global Git hooks                    |
 | `git-policy uninstall`                    | Remove global Git hooks                     |
 | `git-policy run`                          | Execute all policies against staged files   |
+| `git-policy history`                      | Show git-policy run history                 |
 | `git-policy doctor`                       | Verify installation and hooks               |
 | `git-policy validate`                     | Show current config and validate it         |
 | `git-policy version`                      | Print version information                   |

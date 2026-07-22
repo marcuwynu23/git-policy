@@ -172,6 +172,7 @@ For detailed usage, see [USER-GUIDE.md](USER-GUIDE.md).
 | `uninstall`                        | Remove hooks (keeps config)                        |
 | `uninstall --all`                  | Remove hooks + config entirely                     |
 | `run`                              | Run rules against current repository               |
+| `history`                          | Show git-policy run history                        |
 | `doctor`                           | Check if git-policy is set up correctly            |
 | `validate`                         | Check if config is valid                           |
 | `rule list`                        | Show all rules and on/off status                   |

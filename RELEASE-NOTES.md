@@ -9,10 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- 
+- `history` command to track git-policy runs across all repositories
+- History configuration options (`history.enabled`, `history.maxRecords`)
+- History filters: `--limit`, `--repo`, `--status`, `--clear`
+- Global history storage in `~/.config/git-policy/history/history.jsonl`
 
 ### Changed
-- 
+- Updated `ConfigDir` in internal config to use default config path when configPath is empty
 
 ### Deprecated
 - 
@@ -21,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 
 
 ### Fixed
-- 
+- History command now properly uses the global config path specified via `--config`
 
 ### Security
 - 
