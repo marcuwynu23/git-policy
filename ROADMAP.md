@@ -5,7 +5,7 @@
 ### Built-in Policies (6 rules)
 
 - [x] **BlockFiles** — prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable patterns)
-- [x] **SecretScan** — detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens, JWTs in staged files
+- [x] **SecretScan** — detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens in staged files
 - [x] **BranchProtection** — blocks direct commits to `main`, `master`, `production` (configurable)
 - [x] **CommitMessage** — enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc.
 - [x] **FileSize** — rejects files larger than configured limit (default 10MB)
@@ -21,12 +21,39 @@
 - [x] `version` — print version
 - [x] `rule list` — list rules and enabled/disabled status
 - [x] `rule enable` / `rule disable` — toggle rules via CLI
-- [x] `rule skip` / `rule skip --clear` — temporarily skip rules for current commit (auto-clears on success)
+- [x] `rule skip [name...]` — temporarily skip rules for current commit
+- [x] `rule skip --list` — show currently skipped rules
+- [x] `rule skip --clear` — clear all skipped rules
+- [x] `plugins install <file>` — install a plugin from YAML descriptor
+- [x] `plugins install --disabled <file>` — install with rules disabled by default
+- [x] `plugins uninstall <name>` — remove a plugin and its descriptor file from disk
+- [x] `plugins list` — list installed plugins with file paths
 - [ ] `sync` — sync policies from remote source (Git, HTTP, S3, GCS)
-- [ ] `rule add` / `rule remove` — custom rule management
+- [ ] `rule add` / `rule remove` — custom rule management (use plugins instead)
 - [ ] `rule export` / `rule import` — rule sharing
-- [ ] `plugins install` — install a Go plugin
-- [x] `plugins list` — list installed plugins
+
+### Plugin System (YAML-Driven Custom Rules)
+
+Custom rules defined in plain YAML — no Go compilation needed. Works on all platforms.
+
+- [x] Plugin descriptor YAML format with `name` and `rules` array
+- [x] 4 custom rule types:
+
+| Type             | Description                              |
+|------------------|------------------------------------------|
+| `file-block`     | Block files matching a glob pattern      |
+| `file-content`   | Scan file contents for a string pattern  |
+| `branch-name`    | Block commits to branches matching glob  |
+| `commit-message` | Block commits with messages matching glob|
+
+- [x] `CustomPolicy` in `internal/policy/custom.go` — validates each rule type
+- [x] `plugins.Loader.PoliciesFromPlugins` — loads descriptor files from disk
+- [x] `plugins install <file>` — copies descriptor to `<config-dir>/plugins/<name>.yaml`
+- [x] `plugins install --disabled` — installs with all rules disabled
+- [x] `plugins uninstall <name>` — removes config entry + descriptor file from disk
+- [x] `plugins list` — shows name, enabled/disabled, and file path
+- [x] Relative plugin path resolution against config file directory
+- [x] Cross-platform: pure YAML, no `.so` files, works on Windows/Linux/macOS
 
 ### Rule Skip (`rule skip`)
 
@@ -53,13 +80,6 @@ git policy skip --clear                    # clear all skipped rules
 | Rule passes after skip | Skip auto-cleared after commit |
 | Non-skipped rule blocks | Skip preserved, commit blocked |
 
-**Files to implement:**
-
-- [ ] `cmd/policy.go` — add `policySkipCmd` subcommand with `--list`, `--clear` flags
-- [ ] `internal/runner/runner.go` — read `git-policy.skip` from local config, pass to engine
-- [ ] `internal/engine/engine.go` — accept skip list, exclude matching policies from execution
-- [ ] `internal/git/git.go` — add `GetConfig(key)`, `SetConfig(key, val)`, `UnsetConfig(key)` helpers
-
 ### Architecture
 
 - [x] Go static binary, single dependency on `git` CLI
@@ -73,27 +93,6 @@ git policy skip --clear                    # clear all skipped rules
 ---
 
 ## v2 — Planned
-
-### Plugin System (Custom Rules)
-
-Users will write and load custom policies without modifying git-policy itself.
-
-- [ ] Wire `internal/plugins` into the runner — load `.so` plugin files at startup
-- [ ] `plugins install <path>` — install and register a plugin
-- [ ] `plugins list` — show installed plugins with their policies
-- [ ] `plugins remove <name>` — uninstall a plugin
-- [ ] Plugin SDK documentation — interface, context, result types
-- [ ] Plugin config via YAML (per-plugin settings)
-
-The Go plugin interface is already defined:
-
-```go
-type Plugin interface {
-    Policies() []policy.Policy
-}
-```
-
-The `plugin.Loader` is implemented in `internal/plugins/` but not yet wired into the runner.
 
 ### Remote Sync (Team Policy Distribution)
 
@@ -109,6 +108,14 @@ Share a single policy config across an entire team via remote sources.
 - [ ] Signing / verification of remote policy sources
 
 Provider interface stubs exist in `internal/sync/`.
+
+### Plugin Enhancements
+
+- [ ] Plugin-level enable/disable (currently all-or-nothing per plugin)
+- [ ] Per-rule enable/disable within a plugin
+- [ ] Plugin update command (`plugins update <name>`)
+- [ ] Plugin SDK documentation for contributing custom rule types
+- [ ] Plugin versioning and dependency tracking
 
 ### Per-Repository Overrides
 
@@ -174,5 +181,4 @@ These are under consideration but not yet scoped for a specific release:
 - [ ] **Pre-receive hooks** — server-side enforcement for self-hosted Git
 - [ ] **VS Code extension** — inline policy warnings in the editor
 - [ ] **Policy templates** — pre-built config profiles (solo dev, team, OSS, enterprise)
-- [ ] **Custom regex-based rules** — user-defined patterns without writing Go code
 - [ ] **git-policy server** — central policy management dashboard for teams

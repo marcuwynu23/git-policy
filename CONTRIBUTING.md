@@ -43,7 +43,7 @@
 │   ├── files/            # File blocking & size checks
 │   ├── commitmsg/        # Conventional commit validation
 │   ├── branch/           # Branch protection
-│   ├── plugins/          # Go plugin loader (stub)
+│   ├── plugins/          # YAML-driven custom rules loader
 │   ├── sync/             # Sync providers (stub)
 │   ├── logger/           # slog setup
 │   └── utils/            # Shared utilities
@@ -69,7 +69,7 @@
 | `files/` | File blocking, binary detection, size checks |
 | `commitmsg/` | Conventional commit format validation |
 | `branch/` | Branch protection checks |
-| `plugins/` | Go plugin loading (interface stub) |
+| `plugins/` | YAML-driven custom rules loader (4 rule types) |
 | `logger/` | Structured logging via slog |
 
 ---
