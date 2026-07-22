@@ -102,7 +102,7 @@ func TestReadSkipList_WithValues(t *testing.T) {
 	}
 }
 
-func TestReadSkipList_UnknownName(t *testing.T) {
+func TestReadSkipList_PassesThroughUnknownName(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
 	defer func() { _ = os.Chdir(origDir) }()
@@ -110,11 +110,11 @@ func TestReadSkipList_UnknownName(t *testing.T) {
 	initRepo(t, dir)
 	_ = os.Chdir(dir)
 
-	_ = git.SetConfig("git-policy.skip", "unknown-rule")
+	_ = git.SetConfig("git-policy.skip", "custom:no-todo")
 
 	names := readSkipList()
-	if len(names) != 0 {
-		t.Errorf("expected empty skip list for unknown names, got %v", names)
+	if len(names) != 1 || names[0] != "custom:no-todo" {
+		t.Errorf("expected [custom:no-todo], got %v", names)
 	}
 }
 

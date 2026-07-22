@@ -43,6 +43,10 @@ func Run(cfg *config.Config, configPath string) error {
 	eng.Register(policy.NewSecretScanPolicy(cfg))
 	eng.Register(policy.NewBranchPolicy(cfg))
 
+	for _, rule := range cfg.CustomRules {
+		eng.Register(policy.NewCustomPolicy(rule))
+	}
+
 	if err := registerPluginPolicies(cfg, configPath, eng); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: plugin load failed: %v\n", err)
 	}
@@ -110,6 +114,8 @@ func readSkipList() []string {
 		}
 		if internal, ok := config.PolicyNames[name]; ok {
 			internalNames = append(internalNames, internal)
+		} else {
+			internalNames = append(internalNames, name)
 		}
 	}
 	return internalNames
