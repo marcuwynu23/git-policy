@@ -137,6 +137,93 @@ func TestGetCommitMessage(t *testing.T) {
 	}
 }
 
+func TestGetConfig_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origDir) }()
+
+	initRepo(t, dir)
+	_ = os.Chdir(dir)
+
+	val, err := GetConfig("git-policy.nonexistent")
+	if err == nil {
+		t.Errorf("expected error for missing key, got value %q", val)
+	}
+}
+
+func TestSetConfigAndGetConfig(t *testing.T) {
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origDir) }()
+
+	initRepo(t, dir)
+	_ = os.Chdir(dir)
+
+	err := SetConfig("git-policy.skip", "block-files,secret-scan")
+	if err != nil {
+		t.Fatalf("SetConfig failed: %v", err)
+	}
+
+	val, err := GetConfig("git-policy.skip")
+	if err != nil {
+		t.Fatalf("GetConfig failed: %v", err)
+	}
+	if val != "block-files,secret-scan" {
+		t.Errorf("expected 'block-files,secret-scan', got %q", val)
+	}
+}
+
+func TestSetConfig_ReplacesExisting(t *testing.T) {
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origDir) }()
+
+	initRepo(t, dir)
+	_ = os.Chdir(dir)
+
+	_ = SetConfig("git-policy.skip", "old-value")
+	_ = SetConfig("git-policy.skip", "new-value")
+
+	val, err := GetConfig("git-policy.skip")
+	if err != nil {
+		t.Fatalf("GetConfig failed: %v", err)
+	}
+	if val != "new-value" {
+		t.Errorf("expected 'new-value', got %q", val)
+	}
+}
+
+func TestUnsetConfig(t *testing.T) {
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origDir) }()
+
+	initRepo(t, dir)
+	_ = os.Chdir(dir)
+
+	_ = SetConfig("git-policy.skip", "block-files")
+	_ = UnsetConfig("git-policy.skip")
+
+	_, err := GetConfig("git-policy.skip")
+	if err == nil {
+		t.Error("expected error after unset")
+	}
+}
+
+func TestUnsetConfig_NoErrorIfMissing(t *testing.T) {
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origDir) }()
+
+	initRepo(t, dir)
+	_ = os.Chdir(dir)
+
+	err := UnsetConfig("git-policy.nonexistent")
+	if err != nil {
+		t.Errorf("expected no error for missing key, got %v", err)
+	}
+}
+
 func initRepo(t *testing.T, dir string) {
 	t.Helper()
 	cmd := exec.Command("git", "init")

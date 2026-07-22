@@ -90,3 +90,29 @@ func IsRepo() bool {
 	cmd := exec.Command("git", "rev-parse", "--git-dir")
 	return cmd.Run() == nil
 }
+
+// GetConfig reads a local git config value. Returns error if key not set.
+func GetConfig(key string) (string, error) {
+	cmd := exec.Command("git", "config", "--local", "--get", key)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("getting config %q: %w", key, err)
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// SetConfig writes a local git config value, replacing any existing value.
+func SetConfig(key, value string) error {
+	_ = exec.Command("git", "config", "--local", "--unset-all", key).Run()
+	cmd := exec.Command("git", "config", "--local", "--add", key, value)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("setting config %q: %w", key, err)
+	}
+	return nil
+}
+
+// UnsetConfig removes a key from local git config. No error if key doesn't exist.
+func UnsetConfig(key string) error {
+	_ = exec.Command("git", "config", "--local", "--unset-all", key).Run()
+	return nil
+}
