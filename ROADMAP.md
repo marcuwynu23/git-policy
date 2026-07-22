@@ -21,7 +21,7 @@
 - [x] `version` — print version
 - [x] `rule list` — list rules and enabled/disabled status
 - [x] `rule enable` / `rule disable` — toggle rules via CLI
-- [ ] `rule skip` / `rule skip --clear` — temporarily skip rules for current commit (auto-clears on success)
+- [x] `rule skip` / `rule skip --clear` — temporarily skip rules for current commit (auto-clears on success)
 - [ ] `sync` — sync policies from remote source (Git, HTTP, S3, GCS)
 - [ ] `rule add` / `rule remove` — custom rule management
 - [ ] `rule export` / `rule import` — rule sharing
