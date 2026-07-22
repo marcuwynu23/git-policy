@@ -307,4 +307,4 @@ Before releasing:
 ## Getting Help
 
 - Open an issue on GitHub
-- See [GUIDE.md](GUIDE.md) for usage questions
+- See [USER-GUIDE.md](USER-GUIDE.md) for usage questions

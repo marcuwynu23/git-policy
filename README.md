@@ -160,24 +160,30 @@ git add .env
 git commit -m "test"    # ← blocked by BlockFiles rule
 ```
 
-For detailed usage, see [GUIDE.md](GUIDE.md).
+For detailed usage, see [USER-GUIDE.md](USER-GUIDE.md).
 
 ---
 
 ## Commands at a Glance
 
-| Command               | What it does                            |
-| --------------------- | --------------------------------------- |
-| `install`             | Install global hooks (one-time)         |
-| `uninstall`           | Remove hooks (keeps config)             |
-| `uninstall --all`     | Remove hooks + config entirely          |
-| `run`                 | Run rules against current repository          |
-| `doctor`              | Check if git-policy is set up correctly |
-| `validate`            | Check if config is valid                |
-| `rule list`           | Show all rules and on/off status        |
-| `rule enable <name>`  | Turn a rule on                          |
-| `rule disable <name>` | Turn a rule off                         |
-| `rule skip <name>`    | Skip a rule for the current commit (auto-clears on success) |
+| Command                            | What it does                                      |
+| -----------------------------------| ------------------------------------------------- |
+| `install`                          | Install global hooks (one-time)                    |
+| `uninstall`                        | Remove hooks (keeps config)                        |
+| `uninstall --all`                  | Remove hooks + config entirely                     |
+| `run`                              | Run rules against current repository               |
+| `doctor`                           | Check if git-policy is set up correctly            |
+| `validate`                         | Check if config is valid                           |
+| `rule list`                        | Show all rules and on/off status                   |
+| `rule enable <name>`               | Turn a rule on                                     |
+| `rule disable <name>`              | Turn a rule off                                    |
+| `rule skip [name...]`              | Skip a rule for the current commit (auto-clears)   |
+| `rule skip --list`                 | Show currently skipped rules                       |
+| `rule skip --clear`                | Clear all skipped rules                            |
+| `plugins install <file>`           | Install a plugin from a YAML descriptor            |
+| `plugins install --disabled <file>`| Install with rules disabled by default             |
+| `plugins uninstall <name>`         | Remove a plugin and its descriptor file from disk  |
+| `plugins list`                     | List installed plugins with file paths             |
 
 > `policy` may be used in place of `rule` (e.g. `git-policy policy list`) as an accepted alias.
 
@@ -229,7 +235,7 @@ These are all on the roadmap.
 
 | Resource                               | What's in it                                                        |
 | -------------------------------------- | ------------------------------------------------------------------- |
-| **[GUIDE.md](GUIDE.md)**               | Full usage guide, configuration reference, testing, troubleshooting |
+| **[USER-GUIDE.md](USER-GUIDE.md)**     | Full usage guide, configuration reference, testing, troubleshooting |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Building, testing, adding rules, code standards                     |
 | **[MAINTAINERS.md](MAINTAINERS.md)**   | Project maintainers                                                 |
 | **[CONTRIBUTORS.md](CONTRIBUTORS.md)** | List of contributors                                                |

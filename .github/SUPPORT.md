@@ -3,7 +3,7 @@
 ## Documentation
 
 - **[README.md](../README.md)** — overview, use cases, quick start
-- **[GUIDE.md](../GUIDE.md)** — installation, configuration, testing, workflows, FAQ
+- **[USER-GUIDE.md](../USER-GUIDE.md)** — installation, configuration, testing, workflows, FAQ
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** — building, testing, adding rules, code standards
 
 ## Issues
