@@ -1,0 +1,7 @@
+# Single rule definition — for use with `git-policy rule import`
+# This is a standalone rule, not a plugin (plugins contain multiple rules).
+name: no-todo
+type: file-content
+pattern: "TODO:"
+message: "Commits containing TODO are not allowed"
+fix: "Resolve the TODO before committing"
