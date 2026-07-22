@@ -72,7 +72,11 @@ func TestDefaultConfigPath(t *testing.T) {
 
 func TestAddPlugin(t *testing.T) {
 	cfg := DefaultConfig()
-	entry := PluginEntry{Name: "test", Path: "/test.so", Enabled: true}
+	entry := PluginEntry{
+		Name:    "test",
+		Enabled: true,
+		Rules:   []CustomRuleDef{{Name: "r1", Type: "file-block", Pattern: "*.zip", Message: "no zips"}},
+	}
 	cfg.AddPlugin(entry)
 	if len(cfg.Plugins) != 1 {
 		t.Fatalf("expected 1 plugin, got %d", len(cfg.Plugins))
@@ -84,13 +88,21 @@ func TestAddPlugin(t *testing.T) {
 
 func TestAddPlugin_UpdatesExisting(t *testing.T) {
 	cfg := DefaultConfig()
-	cfg.AddPlugin(PluginEntry{Name: "test", Path: "/old.so", Enabled: true})
-	cfg.AddPlugin(PluginEntry{Name: "test", Path: "/new.so", Enabled: false})
+	cfg.AddPlugin(PluginEntry{
+		Name:    "test",
+		Enabled: true,
+		Rules:   []CustomRuleDef{{Name: "r1", Type: "file-block", Pattern: "*.zip", Message: "no zips"}},
+	})
+	cfg.AddPlugin(PluginEntry{
+		Name:    "test",
+		Enabled: false,
+		Rules:   []CustomRuleDef{{Name: "r2", Type: "file-content", Pattern: "TODO:", Message: "no todos"}},
+	})
 	if len(cfg.Plugins) != 1 {
 		t.Fatalf("expected 1 plugin, got %d", len(cfg.Plugins))
 	}
-	if cfg.Plugins[0].Path != "/new.so" {
-		t.Errorf("expected path '/new.so', got %q", cfg.Plugins[0].Path)
+	if len(cfg.Plugins[0].Rules) != 1 || cfg.Plugins[0].Rules[0].Name != "r2" {
+		t.Errorf("expected updated rules, got %+v", cfg.Plugins[0].Rules)
 	}
 	if cfg.Plugins[0].Enabled {
 		t.Error("expected plugin to be disabled after update")
@@ -99,9 +111,10 @@ func TestAddPlugin_UpdatesExisting(t *testing.T) {
 
 func TestRemovePlugin(t *testing.T) {
 	cfg := DefaultConfig()
-	cfg.AddPlugin(PluginEntry{Name: "a", Path: "/a.so", Enabled: true})
-	cfg.AddPlugin(PluginEntry{Name: "b", Path: "/b.so", Enabled: true})
-	cfg.AddPlugin(PluginEntry{Name: "c", Path: "/c.so", Enabled: true})
+	rule := []CustomRuleDef{{Name: "r", Type: "file-block", Pattern: "*.zip", Message: "no"}}
+	cfg.AddPlugin(PluginEntry{Name: "a", Enabled: true, Rules: rule})
+	cfg.AddPlugin(PluginEntry{Name: "b", Enabled: true, Rules: rule})
+	cfg.AddPlugin(PluginEntry{Name: "c", Enabled: true, Rules: rule})
 
 	if !cfg.RemovePlugin("b") {
 		t.Error("expected RemovePlugin to return true")
@@ -121,7 +134,7 @@ func TestRemovePlugin(t *testing.T) {
 func TestLoadPluginDescriptor(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "plugin.yaml")
-	_ = os.WriteFile(path, []byte("name: my-plugin\npath: /tmp/my.so\nenabled: true\n"), 0644)
+	_ = os.WriteFile(path, []byte("name: my-plugin\nrules:\n  - name: r1\n    type: file-block\n    pattern: \"*.zip\"\n    message: no zips\n"), 0644)
 
 	desc, err := LoadPluginDescriptor(path)
 	if err != nil {
@@ -130,18 +143,15 @@ func TestLoadPluginDescriptor(t *testing.T) {
 	if desc.Name != "my-plugin" {
 		t.Errorf("expected name 'my-plugin', got %q", desc.Name)
 	}
-	if desc.Path != "/tmp/my.so" {
-		t.Errorf("expected path '/tmp/my.so', got %q", desc.Path)
-	}
-	if !desc.Enabled {
-		t.Error("expected enabled")
+	if len(desc.Rules) != 1 || desc.Rules[0].Name != "r1" {
+		t.Errorf("unexpected rules: %+v", desc.Rules)
 	}
 }
 
 func TestLoadPluginDescriptor_MissingName(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "plugin.yaml")
-	_ = os.WriteFile(path, []byte("path: /tmp/my.so\n"), 0644)
+	_ = os.WriteFile(path, []byte("rules:\n  - name: r1\n    type: file-block\n    pattern: \"*.zip\"\n    message: no\n"), 0644)
 
 	_, err := LoadPluginDescriptor(path)
 	if err == nil {
@@ -149,14 +159,14 @@ func TestLoadPluginDescriptor_MissingName(t *testing.T) {
 	}
 }
 
-func TestLoadPluginDescriptor_MissingPath(t *testing.T) {
+func TestLoadPluginDescriptor_MissingRules(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "plugin.yaml")
 	_ = os.WriteFile(path, []byte("name: my-plugin\n"), 0644)
 
 	_, err := LoadPluginDescriptor(path)
 	if err == nil {
-		t.Fatal("expected error for missing path")
+		t.Fatal("expected error for missing rules")
 	}
 }
 
@@ -179,11 +189,19 @@ policies:
   conventionalCommits: true
 plugins:
   - name: plugin-a
-    path: /tmp/a.so
     enabled: true
+    rules:
+      - name: r1
+        type: file-block
+        pattern: "*.zip"
+        message: no zips
   - name: plugin-b
-    path: /tmp/b.so
     enabled: false
+    rules:
+      - name: r2
+        type: file-content
+        pattern: "TODO:"
+        message: no todos
 `)
 	_ = os.WriteFile(path, content, 0644)
 

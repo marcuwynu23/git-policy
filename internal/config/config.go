@@ -10,11 +10,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// CustomRuleDef defines a single custom rule within a plugin.
+type CustomRuleDef struct {
+	Name    string `yaml:"name"`
+	Type    string `yaml:"type"`
+	Pattern string `yaml:"pattern"`
+	Message string `yaml:"message"`
+	Fix     string `yaml:"fix,omitempty"`
+}
+
 // PluginEntry represents a single plugin in the configuration.
 type PluginEntry struct {
-	Name    string `yaml:"name"`
-	Path    string `yaml:"path"`
-	Enabled bool   `yaml:"enabled"`
+	Name    string          `yaml:"name"`
+	Enabled bool            `yaml:"enabled"`
+	Rules   []CustomRuleDef `yaml:"rules"`
 }
 
 // Config represents the complete git-policy configuration.
@@ -124,9 +133,8 @@ func (c *Config) RemovePlugin(name string) bool {
 
 // PluginDescriptor is the YAML structure for a standalone plugin file.
 type PluginDescriptor struct {
-	Name    string `yaml:"name"`
-	Path    string `yaml:"path"`
-	Enabled bool   `yaml:"enabled"`
+	Name  string          `yaml:"name"`
+	Rules []CustomRuleDef `yaml:"rules"`
 }
 
 // LoadPluginDescriptor reads a plugin descriptor from a YAML file.
@@ -142,8 +150,22 @@ func LoadPluginDescriptor(path string) (*PluginDescriptor, error) {
 	if desc.Name == "" {
 		return nil, fmt.Errorf("plugin descriptor %q: name is required", path)
 	}
-	if desc.Path == "" {
-		return nil, fmt.Errorf("plugin descriptor %q: path is required", path)
+	if len(desc.Rules) == 0 {
+		return nil, fmt.Errorf("plugin descriptor %q: at least one rule is required", path)
+	}
+	for i, rule := range desc.Rules {
+		if rule.Name == "" {
+			return nil, fmt.Errorf("plugin descriptor %q: rule %d: name is required", path, i)
+		}
+		if rule.Type == "" {
+			return nil, fmt.Errorf("plugin descriptor %q: rule %q: type is required", path, rule.Name)
+		}
+		if rule.Pattern == "" {
+			return nil, fmt.Errorf("plugin descriptor %q: rule %q: pattern is required", path, rule.Name)
+		}
+		if rule.Message == "" {
+			return nil, fmt.Errorf("plugin descriptor %q: rule %q: message is required", path, rule.Name)
+		}
 	}
 	return &desc, nil
 }
