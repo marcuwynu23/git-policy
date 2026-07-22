@@ -36,15 +36,5 @@ policies:
 
 plugins:
   - name: team-rules
+    path: /path/to/team-rules.yaml
     enabled: true
-    rules:
-      - name: no-todo
-        type: file-content
-        pattern: "TODO:"
-        message: "Commits containing TODO are not allowed"
-        fix: "Resolve the TODO before committing"
-      - name: no-draft-branches
-        type: branch-name
-        pattern: "draft-*"
-        message: "Commits to draft branches are blocked"
-        fix: "Switch to a non-draft branch"
