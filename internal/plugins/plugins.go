@@ -1,10 +1,12 @@
-// Package plugins provides a stub for loading external policy plugins.
+// Package plugins provides loading and management of external policy plugins.
 package plugins
 
 import (
 	"fmt"
 	"plugin"
+	"runtime"
 
+	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/marcuwynu23/git-policy/internal/policy"
 )
 
@@ -23,8 +25,24 @@ func NewLoader() *Loader {
 	return &Loader{}
 }
 
+// LoadFromConfig loads all enabled plugins from config entries.
+func (l *Loader) LoadFromConfig(entries []config.PluginEntry) error {
+	for _, entry := range entries {
+		if !entry.Enabled {
+			continue
+		}
+		if err := l.Load(entry.Path); err != nil {
+			return fmt.Errorf("loading plugin %q: %w", entry.Name, err)
+		}
+	}
+	return nil
+}
+
 // Load opens and validates a Go plugin file.
 func (l *Loader) Load(path string) error {
+	if runtime.GOOS == "windows" {
+		return fmt.Errorf("plugins are not supported on Windows (Go plugin package requires Linux/macOS)")
+	}
 	p, err := plugin.Open(path)
 	if err != nil {
 		return fmt.Errorf("opening plugin %s: %w", path, err)
