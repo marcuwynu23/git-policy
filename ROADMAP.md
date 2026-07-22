@@ -4,32 +4,29 @@
 
 ### Built-in Policies (6 rules)
 
-| Rule | Description |
-|------|-------------|
-| **BlockFiles** | Prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable patterns) |
-| **SecretScan** | Detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens, JWTs in staged files |
-| **BranchProtection** | Blocks direct commits to `main`, `master`, `production` (configurable) |
-| **CommitMessage** | Enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc. |
-| **FileSize** | Rejects files larger than configured limit (default 10MB) |
-| **BinaryFile** | Blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed |
+- [x] **BlockFiles** — prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable patterns)
+- [x] **SecretScan** — detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens, JWTs in staged files
+- [x] **BranchProtection** — blocks direct commits to `main`, `master`, `production` (configurable)
+- [x] **CommitMessage** — enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc.
+- [x] **FileSize** — rejects files larger than configured limit (default 10MB)
+- [x] **BinaryFile** — blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed
 
 ### CLI Commands
 
-| Command | Status |
-|---------|--------|
-| `install` | Install global hooks |
-| `uninstall` | Remove hooks (`--all` also removes config) |
-| `run` | Run policies against current repository |
-| `doctor` | System health check |
-| `validate` | Validate YAML config |
-| `version` | Print version |
-| `rule list` | List rules and enabled/disabled status |
-| `rule enable` / `rule disable` | Toggle rules via CLI |
-| `rule skip` / `rule skip --clear` | **Stub** — temporarily skip rules for current commit (auto-clears on success) |
-| `sync` | **Stub** — prints "not implemented" |
-| `rule add` / `rule remove` | **Stub** — custom rule management |
-| `rule export` / `rule import` | **Stub** — rule sharing |
-| `plugins install` / `plugins list` | **Stub** — plugin management |
+- [x] `install` — install global hooks
+- [x] `uninstall` — remove hooks (`--all` also removes config)
+- [x] `run` — run policies against current repository
+- [x] `doctor` — system health check
+- [x] `validate` — validate YAML config
+- [x] `version` — print version
+- [x] `rule list` — list rules and enabled/disabled status
+- [x] `rule enable` / `rule disable` — toggle rules via CLI
+- [ ] `rule skip` / `rule skip --clear` — temporarily skip rules for current commit (auto-clears on success)
+- [ ] `sync` — sync policies from remote source (Git, HTTP, S3, GCS)
+- [ ] `rule add` / `rule remove` — custom rule management
+- [ ] `rule export` / `rule import` — rule sharing
+- [ ] `plugins install` — install a Go plugin
+- [x] `plugins list` — list installed plugins
 
 ### Rule Skip (`rule skip`)
 
@@ -58,22 +55,20 @@ git policy skip --clear                    # clear all skipped rules
 
 **Files to implement:**
 
-| File | Change |
-|------|--------|
-| `cmd/policy.go` | Add `policySkipCmd` subcommand with `--list`, `--clear` flags |
-| `internal/runner/runner.go` | Read `git-policy.skip` from local config, pass to engine |
-| `internal/engine/engine.go` | Accept skip list, exclude matching policies from execution |
-| `internal/git/git.go` | Add `GetConfig(key)`, `SetConfig(key, val)`, `UnsetConfig(key)` helpers |
+- [ ] `cmd/policy.go` — add `policySkipCmd` subcommand with `--list`, `--clear` flags
+- [ ] `internal/runner/runner.go` — read `git-policy.skip` from local config, pass to engine
+- [ ] `internal/engine/engine.go` — accept skip list, exclude matching policies from execution
+- [ ] `internal/git/git.go` — add `GetConfig(key)`, `SetConfig(key, val)`, `UnsetConfig(key)` helpers
 
 ### Architecture
 
-- Go static binary, single dependency on `git` CLI
-- Cobra CLI framework
-- YAML config at `~/.config/git-policy/config.yaml`
-- Global hooks via `core.hooksPath`
-- 14 internal packages: `config`, `policy`, `engine`, `runner`, `hook`, `git`, `plugins`, `sync`, `secrets`, `commitmsg`, `files`, `branch`, `logger`, `utils`
-- Cross-platform: Windows, macOS, Linux
-- CI/CD: GitHub Actions (test matrix + goreleaser)
+- [x] Go static binary, single dependency on `git` CLI
+- [x] Cobra CLI framework
+- [x] YAML config at `~/.config/git-policy/config.yaml`
+- [x] Global hooks via `core.hooksPath`
+- [x] 14 internal packages: `config`, `policy`, `engine`, `runner`, `hook`, `git`, `plugins`, `sync`, `secrets`, `commitmsg`, `files`, `branch`, `logger`, `utils`
+- [x] Cross-platform: Windows, macOS, Linux
+- [x] CI/CD: GitHub Actions (test matrix + goreleaser)
 
 ---
 
@@ -175,9 +170,9 @@ Replace Git Bash dependency with native PowerShell hooks.
 
 These are under consideration but not yet scoped for a specific release:
 
-- **GUI** — system tray app with policy status, block notifications, quick enable/disable
-- **Pre-receive hooks** — server-side enforcement for self-hosted Git
-- **VS Code extension** — inline policy warnings in the editor
-- **Policy templates** — pre-built config profiles (solo dev, team, OSS, enterprise)
-- **Custom regex-based rules** — user-defined patterns without writing Go code
-- **git-policy server** — central policy management dashboard for teams
+- [ ] **GUI** — system tray app with policy status, block notifications, quick enable/disable
+- [ ] **Pre-receive hooks** — server-side enforcement for self-hosted Git
+- [ ] **VS Code extension** — inline policy warnings in the editor
+- [ ] **Policy templates** — pre-built config profiles (solo dev, team, OSS, enterprise)
+- [ ] **Custom regex-based rules** — user-defined patterns without writing Go code
+- [ ] **git-policy server** — central policy management dashboard for teams
