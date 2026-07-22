@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -260,6 +261,112 @@ func initCmdRepo(t *testing.T, dir string) {
 	_ = exec.Command("git", "-C", dir, "commit", "-m", "feat: initial commit").Run()
 }
 
+func TestPluginsInstall_InvalidFile(t *testing.T) {
+	_, err := executeCommand(rootCmd, "plugins", "install", "nonexistent.yaml")
+	if err == nil {
+		t.Error("expected error for nonexistent file")
+	}
+	if err != nil && !strings.Contains(err.Error(), "reading plugin descriptor") {
+		t.Errorf("expected 'reading plugin descriptor', got %v", err)
+	}
+}
+
+func TestPluginsList_Empty(t *testing.T) {
+	// Need a temp config to avoid modifying real config
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\n  commit-msg:\n    enabled: true\n  pre-push:\n    enabled: true\n  post-merge:\n    enabled: false\npolicies:\n  blockFiles: []\n  maxFileSize: 10MB\n  secretScan: true\n  protectedBranches: []\n  conventionalCommits: true\n  blockBinaries: []\n"), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "list")
+	if err != nil {
+		t.Fatalf("plugins list failed: %v", err)
+	}
+	if !strings.Contains(output, "No plugins installed") {
+		t.Errorf("expected 'No plugins installed', got: %s", output)
+	}
+}
+
+func TestPluginsList_WithPlugins(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	yamlContent := `version: 1
+hooks:
+  pre-commit:
+    enabled: true
+  commit-msg:
+    enabled: true
+  pre-push:
+    enabled: true
+  post-merge:
+    enabled: false
+policies:
+  blockFiles: []
+  maxFileSize: 10MB
+  secretScan: true
+  protectedBranches: []
+  conventionalCommits: true
+  blockBinaries: []
+plugins:
+  - name: my-plugin
+    path: /tmp/my-plugin.so
+    enabled: true
+  - name: disabled-plugin
+    path: /tmp/disabled.so
+    enabled: false
+`
+	_ = os.WriteFile(configPath, []byte(yamlContent), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "list")
+	if err != nil {
+		t.Fatalf("plugins list failed: %v", err)
+	}
+	if !strings.Contains(output, "my-plugin") {
+		t.Errorf("expected output to contain 'my-plugin', got: %s", output)
+	}
+	if !strings.Contains(output, "disabled") {
+		t.Errorf("expected output to contain 'disabled', got: %s", output)
+	}
+}
+
+func TestPluginsInstall_FromDescriptor(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	_ = os.WriteFile(configPath, []byte("version: 1\nhooks:\n  pre-commit:\n    enabled: true\n  commit-msg:\n    enabled: true\n  pre-push:\n    enabled: true\n  post-merge:\n    enabled: false\npolicies:\n  blockFiles: []\n  maxFileSize: 10MB\n  secretScan: true\n  protectedBranches: []\n  conventionalCommits: true\n  blockBinaries: []\n"), 0644)
+
+	pluginDesc := filepath.Join(dir, "plugin.yaml")
+	_ = os.WriteFile(pluginDesc, []byte("name: test-plugin\npath: /tmp/test.so\nenabled: true\n"), 0644)
+
+	output, err := executeCommand(rootCmd, "--config", configPath, "plugins", "install", pluginDesc)
+	if err != nil {
+		t.Fatalf("plugins install failed: %v", err)
+	}
+	if !strings.Contains(output, "test-plugin") {
+		t.Errorf("expected output to contain 'test-plugin', got: %s", output)
+	}
+
+	// Verify it was saved to config
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		t.Fatalf("loading config after install: %v", err)
+	}
+	found := false
+	for _, p := range cfg.Plugins {
+		if p.Name == "test-plugin" {
+			found = true
+			if p.Path != "/tmp/test.so" {
+				t.Errorf("expected path '/tmp/test.so', got %q", p.Path)
+			}
+			if !p.Enabled {
+				t.Error("expected plugin to be enabled")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("expected test-plugin to be in config")
+	}
+}
+
 func TestUnimplementedCommandsReturnError(t *testing.T) {
 	tests := []struct {
 		args []string
@@ -269,7 +376,6 @@ func TestUnimplementedCommandsReturnError(t *testing.T) {
 		{[]string{"rule", "remove", "myrule"}, "rule remove not yet implemented"},
 		{[]string{"rule", "export"}, "rule export not yet implemented"},
 		{[]string{"rule", "import", "file.yaml"}, "rule import not yet implemented"},
-		{[]string{"plugins", "install", "plugin.so"}, "plugins install not yet implemented"},
 	}
 	for _, tt := range tests {
 		_, err := executeCommand(rootCmd, tt.args...)

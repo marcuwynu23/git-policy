@@ -155,10 +155,50 @@ var pluginsCmd = &cobra.Command{
 
 var pluginsInstallCmd = &cobra.Command{
 	Use:   "install [path]",
-	Short: "Install a plugin (not yet implemented)",
-	Args:  cobra.ExactArgs(1),
+	Short: "Install a plugin from a YAML descriptor file",
+	Long: `Install a plugin from a YAML descriptor file.
+
+The descriptor file defines the plugin name and path to the .so file:
+
+  name: my-plugin
+  path: /path/to/my-plugin.so
+  enabled: true
+
+Example:
+  git-policy plugins install ./my-plugin.yaml`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("plugins install not yet implemented")
+		desc, err := config.LoadPluginDescriptor(args[0])
+		if err != nil {
+			return err
+		}
+
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		cfg.AddPlugin(config.PluginEntry{
+			Name:    desc.Name,
+			Path:    desc.Path,
+			Enabled: desc.Enabled,
+		})
+
+		if err := config.Save(cfg, path); err != nil {
+			return fmt.Errorf("saving config: %w", err)
+		}
+
+		cmd.Printf("Plugin %q installed.\n", desc.Name)
+		return nil
 	},
 }
 
@@ -267,7 +307,33 @@ var pluginsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List installed plugins",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("No plugins installed.")
+		path := cfgFile
+		if path == "" {
+			var err error
+			path, err = config.DefaultConfigPath()
+			if err != nil {
+				return fmt.Errorf("determining config path: %w", err)
+			}
+		}
+
+		cfg, err := config.Load(path)
+		if err != nil {
+			return fmt.Errorf("loading config: %w", err)
+		}
+
+		if len(cfg.Plugins) == 0 {
+			cmd.Println("No plugins installed.")
+			return nil
+		}
+
+		cmd.Println("Installed plugins:")
+		for _, p := range cfg.Plugins {
+			status := "enabled"
+			if !p.Enabled {
+				status = "disabled"
+			}
+			cmd.Printf("  %-20s %-6s  %s\n", p.Name, status, p.Path)
+		}
 		return nil
 	},
 }
