@@ -9,6 +9,7 @@ import (
 	"github.com/marcuwynu23/git-policy/internal/config"
 	"github.com/marcuwynu23/git-policy/internal/engine"
 	"github.com/marcuwynu23/git-policy/internal/git"
+	"github.com/marcuwynu23/git-policy/internal/plugins"
 	"github.com/marcuwynu23/git-policy/internal/policy"
 )
 
@@ -42,6 +43,10 @@ func Run(cfg *config.Config) error {
 	eng.Register(policy.NewSecretScanPolicy(cfg))
 	eng.Register(policy.NewBranchPolicy(cfg))
 
+	if err := registerPluginPolicies(cfg, eng); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: plugin load failed: %v\n", err)
+	}
+
 	results := eng.ExecuteWith(policy.Context{
 		RepoPath:    ".",
 		StagedFiles: stagedFiles,
@@ -70,6 +75,21 @@ func Run(cfg *config.Config) error {
 	}
 
 	fmt.Println("All policies passed.")
+	return nil
+}
+
+// registerPluginPolicies loads all enabled plugins and registers their policies.
+func registerPluginPolicies(cfg *config.Config, eng *engine.Engine) error {
+	if len(cfg.Plugins) == 0 {
+		return nil
+	}
+	loader := plugins.NewLoader()
+	if err := loader.LoadFromConfig(cfg.Plugins); err != nil {
+		return err
+	}
+	for _, p := range loader.Policies() {
+		eng.Register(p)
+	}
 	return nil
 }
 
