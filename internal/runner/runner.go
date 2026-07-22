@@ -84,10 +84,7 @@ func registerPluginPolicies(cfg *config.Config, eng *engine.Engine) error {
 		return nil
 	}
 	loader := plugins.NewLoader()
-	if err := loader.LoadFromConfig(cfg.Plugins); err != nil {
-		return err
-	}
-	for _, p := range loader.Policies() {
+	for _, p := range loader.PoliciesFromPlugins(cfg.Plugins) {
 		eng.Register(p)
 	}
 	return nil
