@@ -74,8 +74,8 @@ func TestAddPlugin(t *testing.T) {
 	cfg := DefaultConfig()
 	entry := PluginEntry{
 		Name:    "test",
+		Path:    "/home/user/plugins/test.yaml",
 		Enabled: true,
-		Rules:   []CustomRuleDef{{Name: "r1", Type: "file-block", Pattern: "*.zip", Message: "no zips"}},
 	}
 	cfg.AddPlugin(entry)
 	if len(cfg.Plugins) != 1 {
@@ -88,21 +88,13 @@ func TestAddPlugin(t *testing.T) {
 
 func TestAddPlugin_UpdatesExisting(t *testing.T) {
 	cfg := DefaultConfig()
-	cfg.AddPlugin(PluginEntry{
-		Name:    "test",
-		Enabled: true,
-		Rules:   []CustomRuleDef{{Name: "r1", Type: "file-block", Pattern: "*.zip", Message: "no zips"}},
-	})
-	cfg.AddPlugin(PluginEntry{
-		Name:    "test",
-		Enabled: false,
-		Rules:   []CustomRuleDef{{Name: "r2", Type: "file-content", Pattern: "TODO:", Message: "no todos"}},
-	})
+	cfg.AddPlugin(PluginEntry{Name: "test", Path: "/old/path.yaml", Enabled: true})
+	cfg.AddPlugin(PluginEntry{Name: "test", Path: "/new/path.yaml", Enabled: false})
 	if len(cfg.Plugins) != 1 {
 		t.Fatalf("expected 1 plugin, got %d", len(cfg.Plugins))
 	}
-	if len(cfg.Plugins[0].Rules) != 1 || cfg.Plugins[0].Rules[0].Name != "r2" {
-		t.Errorf("expected updated rules, got %+v", cfg.Plugins[0].Rules)
+	if cfg.Plugins[0].Path != "/new/path.yaml" {
+		t.Errorf("expected path '/new/path.yaml', got %q", cfg.Plugins[0].Path)
 	}
 	if cfg.Plugins[0].Enabled {
 		t.Error("expected plugin to be disabled after update")
@@ -111,10 +103,9 @@ func TestAddPlugin_UpdatesExisting(t *testing.T) {
 
 func TestRemovePlugin(t *testing.T) {
 	cfg := DefaultConfig()
-	rule := []CustomRuleDef{{Name: "r", Type: "file-block", Pattern: "*.zip", Message: "no"}}
-	cfg.AddPlugin(PluginEntry{Name: "a", Enabled: true, Rules: rule})
-	cfg.AddPlugin(PluginEntry{Name: "b", Enabled: true, Rules: rule})
-	cfg.AddPlugin(PluginEntry{Name: "c", Enabled: true, Rules: rule})
+	cfg.AddPlugin(PluginEntry{Name: "a", Path: "/a.yaml", Enabled: true})
+	cfg.AddPlugin(PluginEntry{Name: "b", Path: "/b.yaml", Enabled: true})
+	cfg.AddPlugin(PluginEntry{Name: "c", Path: "/c.yaml", Enabled: true})
 
 	if !cfg.RemovePlugin("b") {
 		t.Error("expected RemovePlugin to return true")
@@ -189,19 +180,11 @@ policies:
   conventionalCommits: true
 plugins:
   - name: plugin-a
+    path: /tmp/a.yaml
     enabled: true
-    rules:
-      - name: r1
-        type: file-block
-        pattern: "*.zip"
-        message: no zips
   - name: plugin-b
+    path: /tmp/b.yaml
     enabled: false
-    rules:
-      - name: r2
-        type: file-content
-        pattern: "TODO:"
-        message: no todos
 `)
 	_ = os.WriteFile(path, content, 0644)
 

@@ -20,10 +20,11 @@ type CustomRuleDef struct {
 }
 
 // PluginEntry represents a single plugin in the configuration.
+// Path is the location of the plugin descriptor YAML file.
 type PluginEntry struct {
-	Name    string          `yaml:"name"`
-	Enabled bool            `yaml:"enabled"`
-	Rules   []CustomRuleDef `yaml:"rules"`
+	Name    string `yaml:"name"`
+	Path    string `yaml:"path"`
+	Enabled bool   `yaml:"enabled"`
 }
 
 // Config represents the complete git-policy configuration.
