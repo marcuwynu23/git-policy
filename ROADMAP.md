@@ -16,6 +16,7 @@
 - [x] `install` — install global hooks
 - [x] `uninstall` — remove hooks (`--all` also removes config)
 - [x] `run` — run policies against current repository
+- [x] `history` — show git-policy run history
 - [x] `doctor` — system health check
 - [x] `validate` — validate YAML config
 - [x] `version` — print version
@@ -36,17 +37,17 @@
 
 ### History (`history` subcommand)
 
-Track git-policy activity per repository — what rules ran, what passed, what was blocked.
+Track git-policy activity across all repositories — what rules ran, what passed, what was blocked.
 
-- [ ] `git-policy history` — show recent activity (pass/fail per rule, timestamps, repository, branch)
-- [ ] `git-policy history --limit <n>` — restrict to the last N records (default: 20)
-- [ ] `git-policy history --repo` — filter by current or specific repository
-- [ ] `git-policy history --status pass|fail` — filter results by outcome
-- [ ] Enable/disable via config: `history.enabled: true` in `config.yaml`
-- [ ] Configurable retention: `history.maxRecords: 1000` in `config.yaml`
-- [ ] Storage: append-only JSONL per repository at `<config-dir>/history/<repo-hash>.jsonl`
-- [ ] Auto-log on every `git-policy run` — records date, repo path, branch, each rule name + status + message
-- [ ] `git-policy history --clear` — wipe all history for the current repository
+- [x] `git-policy history` — show recent activity (pass/fail per rule, timestamps, repository, branch)
+- [x] `git-policy history --limit <n>` — restrict to the last N records (default: 20)
+- [x] `git-policy history --repo` — filter by current or specific repository
+- [x] `git-policy history --status pass|fail` — filter results by outcome
+- [x] Enable/disable via config: `history.enabled: true` in `config.yaml`
+- [x] Configurable retention: `history.maxRecords: 1000` in `config.yaml`
+- [x] Storage: append-only JSONL for all repositories at `<config-dir>/history/history.jsonl`
+- [x] Auto-log on every `git-policy run` — records date, repo path, branch, each rule name + status + message
+- [x] `git-policy history --clear` — wipe all history, or `--clear --repo <path>` to wipe for specific repository
 
 **Log format (JSONL — one JSON object per line):**
 
