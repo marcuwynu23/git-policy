@@ -34,6 +34,20 @@
 - [x] `plugins list` — list installed plugins with file paths
 - [ ] `sync` — sync policies from remote source (Git, HTTP, S3, GCS)
 
+### History (`history` subcommand)
+
+Track git-policy activity per repository — what rules ran, what passed, what was blocked.
+
+- [ ] `git-policy history` — show recent activity (pass/fail per rule, timestamps, repository, branch)
+- [ ] `git-policy history --limit <n>` — restrict to the last N records (default: 20)
+- [ ] `git-policy history --repo` — filter by current or specific repository
+- [ ] `git-policy history --status pass|fail` — filter results by outcome
+- [ ] Enable/disable via config: `history.enabled: true` in `config.yaml`
+- [ ] Configurable retention: `history.maxRecords: 1000` in `config.yaml`
+- [ ] Storage: append-only JSON log per repository at `<config-dir>/history/<repo-hash>.json`
+- [ ] Auto-log on every `git-policy run` — records date, repo path, branch, each rule name + status + message
+- [ ] `git-policy history --clear` — wipe all history for the current repository
+
 ### Plugin System (YAML-Driven Custom Rules)
 
 Custom rules defined in plain YAML — no Go compilation needed. Works on all platforms.
