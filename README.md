@@ -178,7 +178,7 @@ For detailed usage, see [USER-GUIDE.md](USER-GUIDE.md).
 | `rule list`                        | Show all rules and on/off status                   |
 | `rule enable <name>`               | Turn a rule on                                     |
 | `rule disable <name>`              | Turn a rule off                                    |
-| `rule skip [name...]`              | Skip a rule for the current commit (auto-clears)   |
+| `rule skip [name...]`              | Skip a rule for the current commit (use --clear to undo) |
 | `rule skip --list`                 | Show currently skipped rules                       |
 | `rule skip --clear`                | Clear all skipped rules                            |
 | `rule add <name>`                  | Add a custom rule (--type, --pattern, --message)   |

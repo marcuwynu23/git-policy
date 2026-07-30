@@ -110,7 +110,7 @@ git policy skip --clear                    # clear all skipped rules
 
 **Storage:** Per-repository via local git config (`git config --local`) — stored in `.git/config` under `git-policy.skip`. This keeps skips isolated to a single repo and doesn't pollute global state.
 
-**Automatic clear on success:** After a successful `git-policy run` (all non-skipped rules pass), the skip list is automatically removed from local git config. If any non-skipped rule blocks the commit, the skip list is preserved so the user can retry without re-specifying skips.
+**Manual clear required:** The skip list persists across all hooks and commits until explicitly cleared. Use `git-policy rule skip --clear` to remove all skipped rules. This ensures the skip works through all Git hooks (pre-commit, commit-msg) that fire during a single commit.
 
 **Behavior:**
 
@@ -120,7 +120,7 @@ git policy skip --clear                    # clear all skipped rules
 | `skip` with invalid rule name | Error with available rules list |
 | `skip` (no args) | Show usage / current skips |
 | Already-skipped rule in `skip` | Idempotent — no duplicate |
-| Rule passes after skip | Skip auto-cleared after commit |
+| Rule passes after skip | Skip persists — clear manually with `--clear` |
 | Non-skipped rule blocks | Skip preserved, commit blocked |
 
 ### Architecture

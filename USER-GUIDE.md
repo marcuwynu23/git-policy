@@ -319,9 +319,10 @@ git-policy rule skip --list
 git-policy rule skip --clear
 ```
 
-Skipped rules are stored in the repository's local Git config and are
-**automatically cleared** after a successful commit. This means you never
-accidentally leave rules disabled.
+Skipped rules are stored in the repository's local Git config and
+**persist across all hooks** during a commit. This ensures the skip works
+through both the pre-commit and commit-msg hooks. To remove skipped rules
+after the commit succeeds, run `git-policy rule skip --clear`.
 
 ### Run Rules Manually
 
@@ -718,7 +719,7 @@ git-policy run
 # Temporarily skip the rule for this commit
 git-policy rule skip block-files
 
-# It auto-clears after a successful commit
+# Clear after the commit succeeds
 ```
 
 ### Plugin installation fails

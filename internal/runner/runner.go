@@ -77,11 +77,6 @@ func Run(cfg *config.Config, configPath string) error {
 		os.Exit(1)
 	}
 
-	// Auto-clear skip list on success
-	if len(skipNames) > 0 {
-		_ = git.UnsetConfig("git-policy.skip")
-	}
-
 	fmt.Println("All policies passed.")
 	return nil
 }

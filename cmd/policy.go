@@ -557,7 +557,7 @@ func addSkippedRules(cmd *cobra.Command, cliNames []string) error {
 		return fmt.Errorf("setting skip list: %w", err)
 	}
 	cmd.Printf("Skipped rules: %s\n", strings.Join(existing, ", "))
-	cmd.Println("Skipped rules will be automatically cleared after a successful commit.")
+	cmd.Println("Skipped rules will persist across all hooks. Use 'git-policy rule skip --clear' to remove them.")
 	return nil
 }
 
