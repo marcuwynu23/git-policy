@@ -1,227 +1,139 @@
-# Roadmap
+# git-policy Roadmap
 
-## v1.0 — Current Release
+Last updated: 2026-11-24
 
-### Built-in Policies (6 rules)
+## Current status
 
-- [x] **BlockFiles** — prevents committing `.env`, `*.pem`, `*.key`, `*.p12`, `*.crt` (configurable patterns)
-- [x] **SecretScan** — detects AWS keys, GitHub tokens, OpenAI keys, Stripe keys, Slack tokens in staged files
-- [x] **BranchProtection** — blocks direct commits to `main`, `master`, `production` (configurable)
-- [x] **CommitMessage** — enforces conventional commits: `feat:`, `fix:`, `docs:`, `test:`, etc.
-- [x] **FileSize** — rejects files larger than configured limit (default 10MB)
-- [x] **BinaryFile** — blocks `.exe`, `.dll`, `.so`, `.iso`, `.zip` from being committed
+- Version: `v1.1.0` is the latest release (2026-07-30), preceded by `v1.0.1` (2026-07-16) and `v1.0.0` (2026-07-03). Working tree is at `3b763ec` with untracked `AGENTS.md` and `project-aware-agent-maker.md`.
+- Quality gates: `make lint`, `make vet`, `make test`, `make build`, and the CI-form coverage command all exited `0` on 2026-11-24. `gh run list --limit 10` returned 10/10 success, including release run `30564856094` on `v1.1.0` and test run `30564832509` on `main`.
+- Coverage: `CONTRIBUTING.md:269` requires 90%+ for `internal/` packages. Measured misses include `internal/runner` 19.0%, `internal/config` 46.5%, `internal/plugins` 0.0%, `internal/sync` 0.0%, `internal/git` 67.8%, `internal/history` 70.5%, `internal/hook` 71.1%, `internal/utils` 75.0%, and `internal/engine` 80.0%. The target is not lowered.
+- Issues: `gh issue list --state open --limit 100` and the closed-issue check both returned `[]`. No GitHub issue numbers exist to reference; every queue item is marked `needs-issue`.
+- Board: `git-policy Roadmap` project 25 at https://github.com/users/marcuwynu23/projects/25 holds 12 draft items, all in `Todo`, with no issue numbers.
+- Documentation drift is confirmed in `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`, and this roadmap's prior v1.0 labeling; see Risks.
 
-### CLI Commands
+## Implemented features
 
-- [x] `install` — install global hooks
-- [x] `uninstall` — remove hooks (`--all` also removes config)
-- [x] `run` — run policies against current repository
-- [x] `history` — show git-policy run history
-- [x] `doctor` — system health check
-- [x] `validate` — validate YAML config
-- [x] `version` — print version
-- [x] `rule list` — list rules and enabled/disabled status
-- [x] `rule enable` / `rule disable` — toggle rules via CLI
-- [x] `rule skip [name...]` — temporarily skip rules for current commit
-- [x] `rule skip --list` — show currently skipped rules
-- [x] `rule skip --clear` — clear all skipped rules
-- [x] `rule add <name>` — add a custom rule directly to config (--type, --pattern, --message, --fix)
-- [x] `rule remove <name>` — remove a custom rule from config
-- [x] `rule export <name>` — export a custom rule as a YAML file
-- [x] `rule import <file>` — import a custom rule from a YAML file
-- [x] `plugins install <file>` — install a plugin from YAML descriptor
-- [x] `plugins install --disabled <file>` — install with rules disabled by default
-- [x] `plugins uninstall <name>` — remove a plugin and its descriptor file from disk
-- [x] `plugins list` — list installed plugins with file paths
-- [ ] `sync` — sync policies from remote source (Git, HTTP, S3, GCS)
+| Feature | Status | Evidence |
+| --- | --- | --- |
+| Cobra CLI with `rule` and `policy` aliases | done | `main.go:5`, `cmd/root.go:12-35`, `cmd/policy.go`, `cmd/cmd_test.go` |
+| Global Git hook install/uninstall with static builds | done | `internal/hook/hook.go`, `internal/hook/hook_test.go`, `Makefile:9,17` |
+| Six built-in policies | done | `internal/policy/*.go`, `internal/runner/runner.go:40-45`, `internal/policy/policy_test.go` |
+| Custom YAML rules (file-block, file-content, branch-name, commit-message) | done | `internal/policy/custom.go`, `internal/policy/custom_test.go`, `USER-GUIDE.md:384-489` |
+| Plugin CLI: install, list, uninstall, enable/disable | done | `cmd/policy.go`, `cmd/cmd_test.go` (`TestPlugins*`) |
+| Persistent rule skip list and clear/list commands | done | `internal/runner/runner.go:103-120`, `internal/engine/engine_test.go`, `cmd/cmd_test.go` |
+| Rule add/remove/import/export | done | `cmd/policy.go`, `cmd/cmd_test.go` |
+| History query and clear | done | `cmd/history.go`, `internal/history/history.go`, `internal/history/history_test.go` |
+| Conventional commit-message validation | done | `internal/policy/commitmsg.go`, `internal/policy/policy_test.go` |
+| Staged-file secret scanning and block-file policy | done | `internal/policy/secret.go`, `internal/secrets/secrets.go`, `internal/policy/policy_test.go` |
+| Three-OS CI matrix with lint, vet, tests, coverage | done | `.github/workflows/test.yml:10-60` |
+| Tagged cross-build release workflow | done | `.github/workflows/release.yml:4-50`, release `v1.1.0` |
+| v1.1.0 release notes | done | `docs/releases/v1.1.0/RELEASE-NOTES.md` |
 
-### History (`history` subcommand)
+## Not done / none
 
-Track git-policy activity across all repositories — what rules ran, what passed, what was blocked.
+- No P0 security or data-loss fix is currently identified: no open issues exist and all quality gates are green. If one appears, it supersedes this queue.
+- Remote policy sync is not done: `cmd/sync.go:17` prints `Sync command is not yet implemented.` and `internal/sync/sync.go` has no tests.
+- Config v2 migration is not done and remains explicitly out of scope.
+- GUI, VS Code, and JetBrains adapters are not done and remain out of scope.
+- RequiredFiles policy is not done: `internal/config/config.go:67,247` defines `RequiredFiles` with defaults `README.md` and `LICENSE`, but no policy is registered in `internal/runner/runner.go:40-45`.
+- Windows native hooks are not done: current install path still depends on Git Bash per user documentation.
 
-- [x] `git-policy history` — show recent activity (pass/fail per rule, timestamps, repository, branch)
-- [x] `git-policy history --limit <n>` — restrict to the last N records (default: 20)
-- [x] `git-policy history --repo` — filter by current or specific repository
-- [x] `git-policy history --status pass|fail` — filter results by outcome
-- [x] Enable/disable via config: `history.enabled: true` in `config.yaml`
-- [x] Configurable retention: `history.maxRecords: 1000` in `config.yaml`
-- [x] Storage: append-only JSONL for all repositories at `<config-dir>/history/history.jsonl`
-- [x] Auto-log on every `git-policy run` — records date, repo path, branch, each rule name + status + message
-- [x] `git-policy history --clear` — wipe all history, or `--clear --repo <path>` to wipe for specific repository
+## Roadmap verdicts
 
-**Log format (JSONL — one JSON object per line):**
+| Prior roadmap item(s) | Verdict | Evidence / note |
+| --- | --- | --- |
+| v1.0 core setup, CLI, global hooks, six policies, custom rules, plugin CLI, skip list, rule management, history, CI, releases | done | See Implemented features; retain as history, not future work |
+| v1.0 "current release" label | stale | `gh release list` shows `v1.1.0` latest on 2026-07-30 |
+| v1.0 docs accuracy for Go version, plugin support, release tooling | at risk | `README.md:7,225-226`, `CONTRIBUTING.md:18,286,303-304`, `ROADMAP.md:134` |
+| v1.0 90%+ coverage target | at risk | `CONTRIBUTING.md:269` vs measured 0.0%-80.0% misses above |
+| v2 remote sync | at risk | `cmd/sync.go:17` placeholder; `internal/sync` 0.0% coverage |
+| v2 plugin enhancements | at risk | Existing plugin CLI has no scoped enhancement and `internal/plugins` 0.0% coverage |
+| v2 per-repo overrides | at risk | Prior item unchecked; no precedence tests found |
+| v2 pre-push checks | at risk | `hooks/pre-push` installs a shim, but no push-specific rules exist |
+| v2 required-files policy | at risk | Config field exists without registered policy or tests |
+| v2 Windows native hooks | at risk | Native path absent; Git Bash requirement remains in docs |
+| v2 observability / `stats --json` | at risk | `internal/history` exists, but no stats command was found |
+| v2 config v2 migration | stale | Prior item unchecked and explicitly out of scope; needs decision |
+| v2 GUI/VS Code/JetBrains adapters | stale | Prior item unchecked and explicitly out of scope; needs decision |
 
-```json
-{
-  "timestamp": "2026-07-22T14:30:00Z",
-  "repo":    "/home/user/projects/my-app",
-  "branch":  "feature/login",
-  "commit":  "abc1234",
-  "results": [
-    {"rule": "BlockFiles",     "status": "pass"},
-    {"rule": "SecretScan",    "status": "pass"},
-    {"rule": "BranchProtection", "status": "pass"},
-    {"rule": "CommitMessage", "status": "fail", "message": "Commit message does not follow conventional commits: fixed bug"}
-  ],
-  "overall": "fail"
-}
+## Research: comparable projects
+
+All URLs below were fetched on 2026-11-24. No link is inferred from memory.
+
+| Source | Useful pattern | Decision | Why |
+| --- | --- | --- | --- |
+| https://typicode.github.io/husky/ | `core.hooksPath`, 2 kB footprint, all 13 Git hooks, `HUSKY=0` global opt-out | adapt | `git-policy` already uses hook paths; an explicit escape hatch could improve the persisted skip UX |
+| https://github.com/typicode/husky/releases | Frequent small releases with visible notes and contributor credit | adopt | Keep release notes current; `CHANGELOG.md` currently stops at v1.0.0 |
+| https://github.com/evilmartians/lefthook | Single Go binary, `AGENTS.md`, codecov, `goreleaser`, integration tests | adopt/adapt | Static Go builds already match; add coverage posture and reconcile goreleaser documentation with the actual workflow |
+| https://pre-commit.com/ | `SKIP` env var, `validate-config`, `try-repo`, declared hook types | adapt | Rule skip persists to config; an ephemeral bypass and config dry-run are worth scoping |
+| https://github.com/gitleaks/gitleaks | Allowlists, baseline, `git`/`dir`/`stdin` scan modes, feature-complete governance | adapt | Existing secret scan covers staged files; history scanning or allowlists are possible scoped enhancements |
+
+## Prioritized execution queue
+
+Priorities: P0 = security/data-loss blocker, P1 = production readiness, P2 = meaningful capability gap, P3 = exploratory. Effort: S = hours, M = days, L = weeks, XL = multi-week/spike.
+
+### Now (P1)
+
+1. **Reconcile docs with shipped behavior** — `needs-issue`, S, P1. Evidence: `README.md:225-226` says plugins/custom rules are not implemented despite `cmd/policy.go`, `internal/plugins/plugins.go`, and `internal/policy/custom.go`; `README.md:7` and `CONTRIBUTING.md:18` say Go 1.25+ vs `go.mod:3` Go 1.26.1; `ROADMAP.md:3` previously said v1.0 current; `CONTRIBUTING.md:286,303-304` and prior `ROADMAP.md:134` claim goreleaser while `.github/workflows/release.yml` uses manual cross-build plus `softprops/action-gh-release@v2.2.2`. This is the single next thing because it is small, user-facing, and removes active misinformation.
+2. **Close internal coverage gap to documented 90%+** — `needs-issue`, L, P1. Evidence in Current status; do not lower `CONTRIBUTING.md:269`.
+3. **Normalize Go formatting across 21 files** — `needs-issue`, S, P1. Evidence: `gofmt -l .` listed 21 files; `.golangci.yml` does not enable `gofmt`, so lint passes despite sampled missing final newlines.
+
+```mermaid
+flowchart LR
+  A[Reconcile docs] --> B[Close coverage gap] --> C[Normalize formatting]
 ```
 
-Fields:
-- `timestamp` — ISO 8601 UTC
-- `repo` — absolute path to the repository
-- `branch` — branch name at time of run
-- `commit` — short commit hash (if available)
-- `results` — array of per-rule outcomes; each entry has `rule`, `status`, and optional `message` on failure
-- `overall` — `"pass"` if all rules passed, `"fail"` otherwise
+### Next (P2)
 
-### Plugin System (YAML-Driven Custom Rules)
+1. **Define RequiredFiles policy behavior** — `needs-issue`, M, P2. Implement with pass/fail/edge tests and docs, or remove dead config with a migration note.
+2. **Make pre-push checks actionable** — `needs-issue`, M, P2. Document the no-op shim or add a tested push-stage rule.
+3. **Wire sync command or retire it** — `needs-issue`, M, P2. `cmd/sync.go:17` and `internal/sync/sync.go` need a decision.
+4. **Refresh SECURITY.md and CHANGELOG.md** — `needs-issue`, S, P2. Supported versions must match v1.x; v1.1.0 must be recorded.
+5. **Add per-repo config overrides** — `needs-issue`, L, P2. Define precedence, tests, and USER-GUIDE documentation.
+6. **Support Windows native hooks** — `needs-issue`, L, P2. Verify native install/uninstall on `windows-latest`.
 
-Custom rules defined in plain YAML — no Go compilation needed. Works on all platforms.
-
-- [x] Plugin descriptor YAML format with `name` and `rules` array
-- [x] 4 custom rule types:
-
-| Type             | Description                              |
-|------------------|------------------------------------------|
-| `file-block`     | Block files matching a glob pattern      |
-| `file-content`   | Scan file contents for a string pattern  |
-| `branch-name`    | Block commits to branches matching glob  |
-| `commit-message` | Block commits with messages matching glob|
-
-- [x] `CustomPolicy` in `internal/policy/custom.go` — validates each rule type
-- [x] `plugins.Loader.PoliciesFromPlugins` — loads descriptor files from disk
-- [x] `plugins install <file>` — copies descriptor to `<config-dir>/plugins/<name>.yaml`
-- [x] `plugins install --disabled` — installs with all rules disabled
-- [x] `plugins uninstall <name>` — removes config entry + descriptor file from disk
-- [x] `plugins list` — shows name, enabled/disabled, and file path
-- [x] Relative plugin path resolution against config file directory
-- [x] Cross-platform: pure YAML, no `.so` files, works on Windows/Linux/macOS
-
-### Rule Skip (`rule skip`)
-
-Temporarily bypass one or more rules for the current commit without globally disabling them.
-
-```
-git policy skip block-files secret-scan    # skip multiple rules
-git policy skip --list                     # show currently skipped rules
-git policy skip --clear                    # clear all skipped rules
+```mermaid
+flowchart LR
+  A[RequiredFiles decision] --> B[Pre-push behavior] --> C[Sync decision] --> D[Security and changelog] --> E[Per-repo overrides] --> F[Windows native hooks]
 ```
 
-**Storage:** Per-repository via local git config (`git config --local`) — stored in `.git/config` under `git-policy.skip`. This keeps skips isolated to a single repo and doesn't pollute global state.
+### Later (P2/P3)
 
-**Manual clear required:** The skip list persists across all hooks and commits until explicitly cleared. Use `git-policy rule skip --clear` to remove all skipped rules. This ensures the skip works through all Git hooks (pre-commit, commit-msg) that fire during a single commit.
+1. **Scope plugin enhancements** — `needs-issue`, M, P3. Existing plugin CLI needs a concrete enhancement and coverage.
+2. **Add observability stats and JSON output** — `needs-issue`, M, P3. Build on `internal/history` with `stats --json`.
+3. **Decide config v2 migration and GUI adapters** — `needs-issue`, XL, P3. Written spike decision required before implementation.
 
-**Behavior:**
+```mermaid
+flowchart LR
+  A[Plugin scope] --> B[Stats JSON] --> C[Config and GUI spike]
+```
 
-| Scenario | Result |
-|----------|--------|
-| `skip` with valid rule names | Rule names written to local git config |
-| `skip` with invalid rule name | Error with available rules list |
-| `skip` (no args) | Show usage / current skips |
-| Already-skipped rule in `skip` | Idempotent — no duplicate |
-| Rule passes after skip | Skip persists — clear manually with `--clear` |
-| Non-skipped rule blocks | Skip preserved, commit blocked |
+## Issue triage
 
-### Architecture
+- `gh issue list --state open --limit 100 --json number,title,labels,milestone,updatedAt` returned `[]`.
+- Closed-issue check also returned `[]`; there are no issue numbers, labels, or milestones to sync.
+- Verdict: no open issues to triage, rank, close, or link. All queue items are board draft issues marked `needs-issue`; no issue numbers have been invented.
+- `gh label list` returned only default labels (`bug`, `documentation`, `duplicate`, `enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`). No custom triage labels were found.
 
-- [x] Go static binary, single dependency on `git` CLI
-- [x] Cobra CLI framework
-- [x] YAML config at `~/.config/git-policy/config.yaml`
-- [x] Global hooks via `core.hooksPath`
-- [x] 14 internal packages: `config`, `policy`, `engine`, `runner`, `hook`, `git`, `plugins`, `sync`, `secrets`, `commitmsg`, `files`, `branch`, `logger`, `utils`
-- [x] Cross-platform: Windows, macOS, Linux
-- [x] CI/CD: GitHub Actions (test matrix + goreleaser)
+## GitHub Projects
 
----
+- Before action: `gh project list --owner marcuwynu23 --limit 100` showed projects 24, 20, 19, and 18; repository-linked `projectsV2` nodes were `[]`.
+- Created: `git-policy Roadmap`, project 25, private, owner `marcuwynu23`, id `PVT_kwHOA7B5Z84Bs58E`, URL https://github.com/users/marcuwynu23/projects/25.
+- Fields: `Status` (`Todo`, `In Progress`, `Done`), `Priority` (`P0`, `P1`, `P2`, `P3`), `Effort` (`S`, `M`, `L`, `XL`).
+- Synced items: 12 draft issues, all `Todo`, matching the 3 Now + 6 Next + 3 Later queue above. No real issue links are present.
+- Verification: `gh project item-list 25 --owner marcuwynu23 --limit 30 --format json` returned `totalCount: 12` with expected `priority`, `effort`, and `status` values.
 
-## v2 — Planned
+## Ownership and cadence
 
-### Remote Sync (Team Policy Distribution)
+- Roadmap and board owner: project manager agent workflow; maintainer `marcuwynu23` remains approver for scope, priority, and GitHub writes.
+- Review cadence: after each merge or release, and monthly. Next scheduled review: 2026-12-24, or earlier when the Now bucket closes.
+- Definition of done for a roadmap item: stated code/docs/tests landed, `make lint`, `make vet`, `make test`, `make build`, and CI-form coverage pass; board item moved to `Done`; a real GitHub issue link recorded or the `needs-issue` status explicitly resolved.
 
-Share a single policy config across an entire team via remote sources.
+## Risks / open questions
 
-- [ ] Wire `internal/sync` into the `sync` command
-- [ ] `sync` command with `--source` flag (git, http, s3, gcs)
-- [ ] **GitProvider** — clone/fetch policy from a Git repository
-- [ ] **HTTPProvider** — fetch policy from an HTTP/HTTPS endpoint
-- [ ] S3 / GCS providers
-- [ ] Auto-sync on `git-policy run` (with TTL/cache)
-- [ ] Sync validation — dry-run, diff local vs remote
-- [ ] Signing / verification of remote policy sources
-
-Provider interface stubs exist in `internal/sync/`.
-
-### Plugin Enhancements
-
-- [ ] Plugin-level enable/disable (currently all-or-nothing per plugin)
-- [ ] Per-rule enable/disable within a plugin
-- [ ] Plugin update command (`plugins update <name>`)
-- [ ] Plugin SDK documentation for contributing custom rule types
-- [ ] Plugin versioning and dependency tracking
-
-### Per-Repository Overrides
-
-Allow repositories to customize or extend the global policy without disabling it entirely.
-
-- [ ] `git-policy init` — create `.git-policy.yaml` in a repository
-- [ ] Merge strategy — repo-level config merges on top of global config
-- [ ] Per-repo rule enable/disable
-- [ ] Per-repo policy config (block patterns, branch lists, size limits)
-- [ ] `git-policy rule list --local` view
-
-### Pre-Push Enhancements
-
-Push-specific checks beyond what `pre-commit` covers.
-
-- [ ] Block force-push to protected branches
-- [ ] Block push of large refs (exceeds size limit)
-- [ ] Block push of sensitive commit history (commit message scan)
-- [ ] `--max-commits` flag to limit push size
-
-### Required Files Policy
-
-The `requiredFiles` config field exists but no policy validates it yet.
-
-- [ ] `RequiredFiles` policy — ensure staged commits include required files (e.g., `README.md`, `LICENSE`)
-- [ ] Config-driven list of required files per commit type
-
-### Rule Export / Import
-
-Share individual rule configurations across machines or teams.
-
-- [ ] `rule export <name> --format yaml|json` — export a rule's config
-- [ ] `rule import <file>` — import a rule from a file
-- [ ] Rule registry / marketplace (future)
-
-### Windows Native Hooks
-
-Replace Git Bash dependency with native PowerShell hooks.
-
-- [ ] PowerShell `pre-commit`, `pre-push`, `commit-msg` scripts
-- [ ] Detect Windows and install `.ps1` hooks instead of `.sh`
-- [ ] Handle PowerShell execution policy
-
-### Config Version Migration
-
-- [ ] `version: 2` config schema support
-- [ ] Migration path from v1 to v2 config
-- [ ] Backward-compatible loading
-
-### Observability
-
-- [ ] `git-policy stats` — hit counters per rule, block rate, execution time
-- [ ] `git-policy log` — recent policy runs with results
-- [ ] JSON output mode (`--json`) for tooling integration
-
----
-
-## Backlog / Ideas
-
-These are under consideration but not yet scoped for a specific release:
-
-- [ ] **GUI** — system tray app with policy status, block notifications, quick enable/disable
-- [ ] **Pre-receive hooks** — server-side enforcement for self-hosted Git
-- [ ] **VS Code extension** — inline policy warnings in the editor
-- [ ] **Policy templates** — pre-built config profiles (solo dev, team, OSS, enterprise)
-- [ ] **git-policy server** — central policy management dashboard for teams
+- Documentation drift actively misleads users about plugin support, Go version, release tooling, and current release.
+- The 90%+ `internal/` coverage target is unmet in several packages; report numbers rather than weakening the gate.
+- No GitHub issues exist, so board items are provisional `needs-issue` drafts until issues are explicitly created.
+- `gofmt -l .` lists 21 files while lint passes; decide whether to normalize or document an exception.
+- Release cadence gap: latest release 2026-07-30, roughly four months before this review, while `CHANGELOG.md` stops at v1.0.0.
+- No P0 item is present today; a security or data-loss finding would immediately supersede this queue.
