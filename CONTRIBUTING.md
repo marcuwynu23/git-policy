@@ -15,7 +15,7 @@
 
 ## Prerequisites
 
-- **Go 1.25+** — download from [go.dev](https://go.dev/dl)
+- **Go 1.26.1+** — download from [go.dev](https://go.dev/dl)
 - **Make** — optional, for Makefile convenience targets
 - **Git** — for version control
 
@@ -283,24 +283,19 @@ make tidy        # go mod tidy + verify
 
 ## Release Process
 
-Releases are built with [goreleaser](https://goreleaser.com):
+Releases are published by `.github/workflows/release.yml` when a `v*` tag is pushed
+or the workflow is dispatched:
 
-```bash
-make dist
-```
+1. Confirm `go.mod` and CI use the intended Go version.
+2. Run `make test`, `make lint`, and `make vet`.
+3. Update release notes under `docs/releases/v<version>/` and `CHANGELOG.md`.
+4. Tag the release: `git tag v<version> && git push --tags`.
+5. The workflow runs the reusable test workflow, cross-builds static binaries for
+   Windows, Linux, and macOS (amd64/arm64), and publishes them with
+   `softprops/action-gh-release@v2.2.2` (`.github/workflows/release.yml:31-50`).
 
-This produces static binaries for:
-- Windows (amd64)
-- Linux (amd64, arm64)
-- macOS (amd64, arm64)
-
-Before releasing:
-
-1. Update the `version` variable in `cmd/version.go`
-2. Run `make test` and verify all tests pass
-3. Run `make lint` and `make vet`
-4. Tag the release: `git tag v0.1.0 && git push --tags`
-5. Build and upload: `goreleaser release`
+Local builds use `make build` and write to `dist/`. The version is derived from
+`git describe` in `Makefile:10-11` and injected into `cmd.version`.
 
 ---
 
