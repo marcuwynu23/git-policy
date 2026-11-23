@@ -4,7 +4,7 @@
 
 ## Project status
 
-git-policy is a released, CI-covered Go CLI (v1.1.0 tag history) that installs global Git hooks and runs six built-in policies plus YAML-defined custom rules; `main.go:5` calls `cmd.Execute` (`cmd/root.go:25`), and `cmd/run.go:18` delegates to `internal/runner/runner.go:19` → `internal/engine/engine.go:45`. All local quality gates executed this session exited 0 (`make lint`, `make vet`, `make test`, `make build`, CI-form coverage test). Repository is `marcuwynu23/git-policy` (`gh repo view`), with no root `PLAN.md` and several documentation drift items recorded below.
+git-policy is a released, CI-covered Go CLI (v1.1.0 tag history) that installs global Git hooks and runs six built-in policies plus YAML-defined custom rules; `main.go:5` calls `cmd.Execute` (`cmd/root.go:25`), and `cmd/run.go:18` delegates to `internal/runner/runner.go:19` → `internal/engine/engine.go:45`. All local quality gates executed this session exited 0 (`make lint`, `make vet`, `make test`, `make build`, CI-form coverage test). Repository is `marcuwynu23/git-policy` (`gh repo view`), with no root `PLAN.md` and remaining documentation gaps recorded below.
 
 - CI: green — `gh run list --limit 10 --json databaseId,name,headBranch,status,conclusion,workflowName` returned 10/10 `conclusion: success`, including release run `30564856094` on branch `v1.1.0` and test run `30564832509` on `main`; no failed run required `--log-failed`.
 - Board: `git-policy Roadmap` project 25 (https://github.com/users/marcuwynu23/projects/25) was created and synced 2026-11-24 after explicit user approval; 12 draft items are all `Todo`. Repository-linked `projectsV2` nodes were `[]` before creation.
@@ -15,9 +15,9 @@ git-policy is a released, CI-covered Go CLI (v1.1.0 tag history) that installs g
 | Architecture / entry points | Cobra CLI in `cmd/`; execution pipeline `cmd/run.go:18-24` → `internal/runner/runner.go:19-82` → `internal/engine/engine.go:45-58`; six built-ins registered at `internal/runner/runner.go:40-45` | `main.go:5-7`, `cmd/root.go:12-35`, cited files |
 | Quality gates | `make lint`, `make vet`, `make test`, `make build` all exit 0; CI coverage test also exit 0 | `Makefile:23-41`; command output this session |
 | CI | `test.yml`: 3-OS matrix (ubuntu/macos/windows) with coverage + lint + vet; `release.yml`: `v*` tags and `workflow_dispatch`, cross-build + `softprops/action-gh-release@v2.2.2` | `.github/workflows/test.yml:10-60`, `.github/workflows/release.yml:4-50` |
-| Docs state | Root docs present; no `PLAN.md`; README/CONTRIBUTING/CHANGELOG/SECURITY contain drift (see Open questions) | `Get-ChildItem -Force`, `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md` |
+| Docs state | Root docs present; no `PLAN.md`; README/CONTRIBUTING/CHANGELOG drift resolved 2026-11-24; `SECURITY.md` still template | `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md` |
 | Coverage policy | `CONTRIBUTING.md:269` requires 90%+ for `internal/`; not met today and not enforced in CI | `go test -count=1 -covermode=atomic -coverprofile=... ./...` output (e.g. `internal/runner` 19.0%, `internal/config` 46.5%, `internal/policy` 92.2%) |
-| Planning / board | `ROADMAP.md` rewritten 2026-11-24 with current v1.1.0 status and ranked queue; project 25 has 12 draft items with Status/Priority/Effort fields | `ROADMAP.md`, `gh project item-list 25 --owner marcuwynu23 --limit 30 --format json` |
+| Planning / board | `ROADMAP.md` rewritten 2026-11-24 with current v1.1.0 status and ranked queue; project 25 has description/README, 12 draft items with Status/Priority/Effort, and repository noted in each body | `ROADMAP.md`, `gh project view 25 --owner marcuwynu23 --format json`, `gh project item-list 25 --owner marcuwynu23 --limit 30 --format json` |
 
 ## Environment & toolchain
 
@@ -45,19 +45,25 @@ git-policy is a released, CI-covered Go CLI (v1.1.0 tag history) that installs g
 | working tree status | `git status --short` | yes (exit 0 this session) |
 | diff whitespace check | `git diff --check` | yes (exit 0; no whitespace errors) |
 | diff summary | `git diff --stat` | yes (ROADMAP.md: 123 insertions, 211 deletions) |
-| recent commits | `git log --oneline -15` | yes (history through `3b763ec`) |
+| recent commits | `git log --oneline -15` | yes (history through `1dfb815`) |
 | open issues | `gh issue list --state open --limit 50 --json number,title,labels,milestone,updatedAt` | yes (returned `[]`) |
 | closed issues | `gh issue list --state closed --limit 50 --json number,title,labels,milestone,updatedAt` | yes (returned `[]`) |
 | labels | `gh label list` | yes (default labels only) |
 | releases | `gh release list --limit 5` | yes (`v1.1.0` latest, 2026-07-30) |
 | CI history | `gh run list --limit 10 --json databaseId,name,headBranch,status,conclusion,workflowName` | yes (10/10 success) |
-| project command help | `gh project create --help`, `gh project field-create --help`, `gh project field-list --help`, `gh project item-create --help`, `gh project item-edit --help`, `gh project item-list --help` | yes (flags captured) |
+| project command help | `gh project create --help`, `gh project edit --help`, `gh project field-create --help`, `gh project field-list --help`, `gh project item-create --help`, `gh project item-edit --help`, `gh project item-list --help`, `gh project view --help` | yes (flags captured) |
 | linked projects (GraphQL) | `gh api graphql -f query='query { repository(owner: "marcuwynu23", name: "git-policy") { projectsV2(first: 100) { nodes { number title url } } } }'` | yes (nodes `[]` before creation) |
+| repository node id (GraphQL) | `gh api graphql -f query='query { repository(owner: "marcuwynu23", name: "git-policy") { id nameWithOwner url } }'` | yes (`R_kgDOTMB2Zg`) |
+| GraphQL field-value schema | `gh api graphql -f query='query { __type(name: "ProjectV2FieldValue") { inputFields { name } } }'` | yes (no `repository` input) |
 | create project | `gh project create --owner marcuwynu23 --title "git-policy Roadmap" --format json` | yes (project 25, id `PVT_kwHOA7B5Z84Bs58E`) |
+| view project | `gh project view 25 --owner marcuwynu23 --format json` | yes (description/readme empty before edit) |
+| edit project metadata | `gh project edit 25 --owner marcuwynu23 --description "..." --readme <markdown> --format json` | yes (description and project README set) |
 | list project fields | `gh project field-list 25 --owner marcuwynu23 --limit 30 --format json` | yes (13 default fields) |
 | create project fields | `gh project field-create 25 --owner marcuwynu23 --name "Priority" --data-type SINGLE_SELECT --single-select-options "P0,P1,P2,P3" --format json` (and `Effort` with `S,M,L,XL`) | yes (option IDs captured) |
 | create project item | `gh project item-create 25 --owner marcuwynu23 --title "..." --body "..." --format json` | yes (12 draft items created) |
 | set project item fields | `gh project item-edit --id <item-id> --project-id PVT_kwHOA7B5Z84Bs58E --field-id <field-id> --single-select-option-id <option-id> --format json` | yes (all 12 items) |
+| edit draft item body | `gh project item-edit --id <draft-content-id> --title <title> --body <markdown> --format json` | yes (12 bodies updated; `DI_` id and `--title` required) |
+| unsupported repository field | `gh project item-edit --id <item-id> --project-id PVT_kwHOA7B5Z84Bs58E --field-id PVTF_lAHOA7B5Z84Bs58EzhrF2k8 --text "marcuwynu23/git-policy" --format json` | yes (error: repository field unsupported on draft issues) |
 | list project items | `gh project item-list 25 --owner marcuwynu23 --limit 30 --format json` | yes (`totalCount: 12`) |
 
 ## Testing & loop engineering (mandatory)
@@ -92,15 +98,16 @@ git-policy is a released, CI-covered Go CLI (v1.1.0 tag history) that installs g
 ## Known priorities (from gh issues and roadmap audit)
 
 - `gh issue list --state open --limit 50` returned `[]` (no open issues as of 2026-11-24); no issue numbers, labels, or milestones to report. All 12 board items are `needs-issue` drafts.
-- Roadmap work (`ROADMAP.md` Prioritized execution queue): P1 docs drift, internal coverage, gofmt; P2 RequiredFiles policy, pre-push, sync, SECURITY/CHANGELOG, per-repo overrides, Windows native hooks; P3 plugin scope, observability, config/GUI spike.
+- Board metadata: project 25 has a short description and README linking to repository docs; native `Repository` field is unsupported for draft issues, so all 12 bodies include `Repository: marcuwynu23/git-policy`.
+- Roadmap work (`ROADMAP.md` Prioritized execution queue): P1 docs drift done 2026-11-24; remaining P1 internal coverage and gofmt; P2 RequiredFiles policy, pre-push, sync, SECURITY (CHANGELOG done), per-repo overrides, Windows native hooks; P3 plugin scope, observability, config/GUI spike.
 - CI is green (see Project status); watch pushed runs to success rather than assuming the last result persists.
 
-## Open questions
+## Open questions and resolved drift
 
-- `README.md:7` and `CONTRIBUTING.md:18` say Go 1.25+, while `go.mod:3` and `go version` show 1.26.1. Which is authoritative for docs?
-- `README.md:225-226` says custom rules/plugins are not implemented; `internal/plugins/plugins.go`, `internal/policy/custom.go`, `cmd/policy.go`, and `USER-GUIDE.md:384-489` show they are. Confirm which statement to keep.
-- `CONTRIBUTING.md:286,303-304` describe goreleaser; `.github/workflows/release.yml:31-50` uses a manual cross-build loop plus `softprops/action-gh-release@v2.2.2`. Reconcile the release documentation; the 2026-11-24 roadmap rewrite already removed this claim from `ROADMAP.md`.
-- `docs/releases/v1.1.0/RELEASE-NOTES.md`, `git log --oneline -10`, and release run `30564856094` reference v1.1.0; the 2026-11-24 roadmap rewrite removed the stale "Current Release" v1.0 label. Other docs should be checked for the same drift.
+- Resolved 2026-11-24: `README.md:7` and `CONTRIBUTING.md:18` now state Go 1.26.1+, matching `go.mod:3` and `go version`.
+- Resolved 2026-11-24: `README.md:225-227` now describes file-based custom YAML rules/plugins instead of claiming they are not implemented; `cmd/policy.go`, `internal/plugins/plugins.go`, `internal/policy/custom.go`, and `USER-GUIDE.md:384-489` remain authoritative.
+- Resolved 2026-11-24: `CONTRIBUTING.md:284-301` now documents the `.github/workflows/release.yml` cross-build plus `softprops/action-gh-release@v2.2.2` instead of goreleaser.
+- Resolved 2026-11-24: `CHANGELOG.md:7-25` now records v1.0.1 and v1.1.0 alongside `docs/releases/v1.1.0/RELEASE-NOTES.md`; the stale "Current Release" v1.0 wording is gone from `ROADMAP.md`.
 - `CONTRIBUTING.md:269` requires 90%+ coverage for `internal/`; measured values include 0.0% (`internal/plugins`, `internal/sync`), 19.0% (`internal/runner`), and 46.5% (`internal/config`). Close the gap; never silently lower it.
 - `gofmt -l .` lists 21 Go files; sampled diffs (e.g. `main.go`, `internal/branch/branch.go`) show missing final newline, and `.golangci.yml` does not enable `gofmt`, so lint passes. Ask before bulk reformatting.
 - `SECURITY.md:5-17` is an unfilled template listing versions 5.1.x/5.0.x/4.0.x, unrelated to the v1.x releases in `docs/releases/`.
