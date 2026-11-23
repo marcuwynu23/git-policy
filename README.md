@@ -4,7 +4,7 @@
 
 **Global Git rule management.** Install once, protect every local repository.
 
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev)
+[![Go Version](https://img.shields.io/badge/Go-1.26.1+-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-lightgrey)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
@@ -222,8 +222,9 @@ git commit -m "feat: add env example"
 
 - **No per-repository overrides** — policies are global only. You can't have
   different rules for different projects yet.
-- **No custom rules** — the plugin system is not implemented. You're
-  limited to the 6 built-in rules.
+- **No rule editor** — custom YAML rules and plugin descriptors are supported
+  (`file-block`, `file-content`, `branch-name`, `commit-message`), but rules are
+  authored as files; see [USER-GUIDE.md](USER-GUIDE.md).
 - **No remote sync** — team policy distribution via Git repository or HTTP
   endpoint is planned but not available.
 - **No pre-push rules** — the pre-push hook runs policies but there
